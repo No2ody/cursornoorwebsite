@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import prisma from '@/lib/prisma'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
+import Image from 'next/image'
 
 export default async function OrdersPage() {
   const session = await auth()
@@ -71,11 +72,14 @@ export default async function OrdersPage() {
                         className='flex items-center justify-between py-4'
                       >
                         <div className='flex items-center space-x-4'>
-                          <img
-                            src={item.product.images[0]}
-                            alt={item.product.name}
-                            className='h-16 w-16 rounded-md object-cover'
-                          />
+                          <div className='h-16 w-16 rounded-md relative overflow-hidden'>
+                            <Image
+                              src={item.product.images[0]}
+                              alt={item.product.name}
+                              fill
+                              className='object-cover'
+                            />
+                          </div>
                           <div>
                             <p className='font-medium'>{item.product.name}</p>
                             <p className='text-sm text-muted-foreground'>

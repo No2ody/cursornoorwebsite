@@ -85,7 +85,7 @@ export function ImageUploader({
           description: `${newImageUrls.length} image(s) uploaded successfully`,
         })
       }
-    } catch (error) {
+    } catch {
       toast({
         title: "Upload failed",
         description: "Failed to process the selected files",

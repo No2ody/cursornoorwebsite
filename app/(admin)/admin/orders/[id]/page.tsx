@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { formatCurrency, formatDate } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
+import Image from 'next/image'
 import { ArrowLeft, Package, User, MapPin, CreditCard } from 'lucide-react'
 
 type tParams = Promise<{ id: string }>
@@ -110,12 +111,13 @@ export default async function OrderDetailPage({ params }: OrderDetailPageProps) 
             <CardContent className="space-y-4">
               {order.items.map((item) => (
                 <div key={item.id} className="flex items-start space-x-4 p-4 border rounded-lg">
-                  <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center">
+                  <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center relative">
                     {item.product.images.length > 0 ? (
-                      <img
+                      <Image
                         src={item.product.images[0]}
                         alt={item.product.name}
-                        className="w-full h-full object-cover rounded-lg"
+                        fill
+                        className="object-cover rounded-lg"
                       />
                     ) : (
                       <Package className="h-6 w-6 text-gray-400" />
