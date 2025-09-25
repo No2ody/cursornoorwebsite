@@ -2,11 +2,11 @@ import { Suspense } from 'react'
 import { AuthForm } from '@/components/auth/auth-form'
 import { Skeleton } from '@/components/ui/skeleton'
 
-function SignInContent() {
-  return <AuthForm mode="signin" />
+function SignUpContent() {
+  return <AuthForm mode="signup" />
 }
 
-function SignInSkeleton() {
+function SignUpSkeleton() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-brand-50 via-white to-gold-50 px-4 py-8">
       <div className="w-full max-w-md">
@@ -20,6 +20,8 @@ function SignInSkeleton() {
             <Skeleton className="h-12 w-full" />
             <Skeleton className="h-12 w-full" />
             <Skeleton className="h-12 w-full" />
+            <Skeleton className="h-12 w-full" />
+            <Skeleton className="h-12 w-full" />
           </div>
         </div>
       </div>
@@ -27,10 +29,10 @@ function SignInSkeleton() {
   )
 }
 
-export default function SignInPage() {
+export default function SignUpPage() {
   return (
-    <Suspense fallback={<SignInSkeleton />}>
-      <SignInContent />
+    <Suspense fallback={<SignUpSkeleton />}>
+      <SignUpContent />
     </Suspense>
   )
 }

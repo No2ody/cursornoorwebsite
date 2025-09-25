@@ -1,5 +1,5 @@
 import { Product } from '@prisma/client'
-import { motion } from 'framer-motion'
+// Removed framer-motion for build compatibility
 import { ProductCard } from '@/components/ui/product-card'
 import { Pagination } from '@/components/ui/pagination'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -46,35 +46,34 @@ export function ProductGrid({
 
   return (
     <div className='space-y-8'>
-      <motion.div 
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.6 }}
-        className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'
-      >
-        {products.map((product, index) => (
-          <motion.div
+      {/* Results Header */}
+      <div className='flex items-center justify-between border-b border-gray-200 pb-4'>
+        <h2 className='text-2xl font-semibold text-ink'>
+          {products.length} {products.length === 1 ? 'Product' : 'Products'} Found
+        </h2>
+        <p className='text-sm text-gray-600'>
+          Page {currentPage} of {totalPages}
+        </p>
+      </div>
+
+      <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 transition-all duration-300'>
+        {products.map((product) => (
+          <div
             key={product.id}
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: index * 0.1 }}
+            className='transform transition-all duration-300 hover:scale-105'
           >
             <ProductCard product={product} />
-          </motion.div>
+          </div>
         ))}
-      </motion.div>
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.3 }}
-        className='flex justify-center'
-      >
+      </div>
+      
+      <div className='flex justify-center pt-8'>
         <Pagination
           currentPage={currentPage}
           totalPages={totalPages}
           onPageChange={onPageChange}
         />
-      </motion.div>
+      </div>
     </div>
   )
 }

@@ -1,7 +1,6 @@
 import { Suspense } from 'react'
 import { redirect } from 'next/navigation'
 import { auth } from '@/auth'
-import { AdminHeader } from '@/components/admin/admin-header'
 import { OrdersTable } from '@/components/admin/orders/orders-table'
 import { OrdersHeader } from '@/components/admin/orders/orders-header'
 import { OrdersStats } from '@/components/admin/orders/orders-stats'
@@ -35,12 +34,9 @@ export default async function OrdersPage(props: OrdersPageProps) {
   const sort = searchParams.sort || 'createdAt-desc'
 
   return (
-    <div className='min-h-screen bg-gray-50'>
-      <AdminHeader />
-      <main className='container mx-auto px-4 sm:px-6 lg:px-8 py-8'>
-        <div className='space-y-8'>
-          {/* Page Header */}
-          <OrdersHeader />
+    <div className='space-y-8'>
+      {/* Page Header */}
+      <OrdersHeader />
 
           {/* Orders Stats */}
           <Suspense fallback={<OrdersStatsSkeleton />}>
@@ -58,8 +54,6 @@ export default async function OrdersPage(props: OrdersPageProps) {
               />
             </Suspense>
           </Card>
-        </div>
-      </main>
     </div>
   )
 }

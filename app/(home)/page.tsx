@@ -3,7 +3,6 @@
 import Image from 'next/image'
 import { LatestProducts } from '@/components/home/latest-products'
 import { CategoryShowcase } from '@/components/home/category-showcase'
-import { motion } from 'framer-motion'
 import {
   Carousel,
   CarouselContent,
@@ -18,19 +17,19 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const fetchProducts = async () => {
+    const fetchLatestProducts = async () => {
       try {
         const response = await fetch('/api/products?limit=8')
         const data = await response.json()
-        setLatestProducts(data.products || [])
+        setLatestProducts(data.products)
       } catch (error) {
-        console.error('Error fetching products:', error)
+        console.error('Error fetching latest products:', error)
       } finally {
         setLoading(false)
       }
     }
-    
-    fetchProducts()
+
+    fetchLatestProducts()
   }, [])
 
   const bannerItems = [
@@ -52,106 +51,72 @@ export default function HomePage() {
   ]
 
   return (
-    <div className='space-y-16 pt-32'>
+    <div className="space-y-16 pt-32">
       {/* Hero Banner Section */}
-      <motion.section 
-        initial={{ opacity: 0, y: 30 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8 }}
-        className='container mx-auto px-4 sm:px-6 lg:px-8'
-      >
-        <div className='relative'>
+      <section className="container mx-auto px-4 sm:px-6 lg:px-8 transform transition-all duration-500">
+        <div className="relative">
           <Carousel
             opts={{
               loop: true,
             }}
-            className='w-full'
+            className="w-full"
           >
             <CarouselContent>
               {bannerItems.map((item, index) => (
                 <CarouselItem key={index}>
-                  <div className='relative aspect-[21/9] w-full overflow-hidden rounded-2xl bg-gradient-to-br from-blue-50 via-white to-purple-50 shadow-xl'>
+                  <div className="relative aspect-[21/9] w-full overflow-hidden rounded-2xl bg-gradient-to-br from-blue-50 via-white to-purple-50 shadow-xl">
                     <Image
                       src={item.image}
                       alt={item.title}
                       fill
-                      className='object-contain p-8 transition-transform duration-700 hover:scale-105'
+                      className="object-contain p-8 transition-transform duration-700 hover:scale-105"
                       priority={index === 0}
                     />
-                    <div className='absolute inset-0 bg-gradient-to-r from-blue-900/80 via-blue-800/60 to-purple-900/80' />
-                    <motion.div 
-                      initial={{ opacity: 0, y: 50 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.8, delay: 0.3 }}
-                      className='absolute inset-0 flex items-center justify-center text-center text-white max-w-4xl mx-auto px-6'
-                    >
+                    <div className="absolute inset-0 bg-gradient-to-r from-blue-900/80 via-blue-800/60 to-purple-900/80" />
+                    <div className="absolute inset-0 flex items-center justify-center text-center text-white max-w-4xl mx-auto px-6 transform transition-all duration-500">
                       <div>
-                        <h3 className='text-4xl md:text-5xl font-bold mb-4 text-yellow-300'>{item.title}</h3>
-                        <p className='text-xl md:text-2xl text-gray-200 leading-relaxed'>
+                        <h3 className="text-4xl md:text-5xl font-bold mb-4 text-yellow-300">{item.title}</h3>
+                        <p className="text-xl md:text-2xl text-gray-200 leading-relaxed">
                           {item.description}
                         </p>
                       </div>
-                    </motion.div>
+                    </div>
                   </div>
                 </CarouselItem>
               ))}
             </CarouselContent>
-            <CarouselPrevious className='left-4 md:left-8 bg-white/80 hover:bg-white/90' />
-            <CarouselNext className='right-4 md:right-8 bg-white/80 hover:bg-white/90' />
+            <CarouselPrevious className="left-4 md:left-8 bg-white/80 hover:bg-white/90" />
+            <CarouselNext className="right-4 md:right-8 bg-white/80 hover:bg-white/90" />
           </Carousel>
         </div>
-      </motion.section>
+      </section>
 
       {/* Category Showcase Section */}
-      <motion.section
-        initial={{ opacity: 0, y: 50 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8 }}
-        viewport={{ once: true }}
-        className='container mx-auto px-4 sm:px-6 lg:px-8'
-      >
+      <section className="container mx-auto px-4 sm:px-6 lg:px-8 transform transition-all duration-500">
         <CategoryShowcase />
-      </motion.section>
+      </section>
 
       {/* Latest Products Section */}
-      <motion.section
-        initial={{ opacity: 0, y: 50 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8 }}
-        viewport={{ once: true }}
-        className='container mx-auto px-4 sm:px-6 lg:px-8'
-      >
-        <div className='text-center mb-12'>
-          <motion.h2 
-            initial={{ opacity: 0, scale: 0.9 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.6 }}
-            viewport={{ once: true }}
-            className='text-4xl md:text-5xl font-bold text-gray-900 mb-4'
-          >
+      <section className="container mx-auto px-4 sm:px-6 lg:px-8 transform transition-all duration-500">
+        <div className="text-center mb-12">
+          <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4 transform transition-all duration-300">
             Latest Products
-          </motion.h2>
-          <motion.p 
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            viewport={{ once: true }}
-            className='text-xl text-gray-600 max-w-3xl mx-auto'
-          >
+          </h2>
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto transform transition-all duration-300">
             Discover our newest collection of premium bathroom fixtures and professional lighting solutions
-          </motion.p>
+          </p>
         </div>
         
         {loading ? (
-          <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6'>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {[1,2,3,4].map(i => (
-              <div key={i} className='bg-gray-200 animate-pulse rounded-2xl h-64'></div>
+              <div key={i} className="bg-gray-200 animate-pulse rounded-2xl h-64"></div>
             ))}
           </div>
         ) : (
           <LatestProducts products={latestProducts} />
         )}
-      </motion.section>
+      </section>
     </div>
   )
 }

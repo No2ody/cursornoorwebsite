@@ -10,6 +10,35 @@ export default {
   theme: {
   	extend: {
   		colors: {
+  			// Brand colors for Noor AlTayseer
+  			brand: {
+  				DEFAULT: '#0B72B9', // Ocean Blue
+  				50: '#EBF5FF',
+  				100: '#D7EBFF',
+  				200: '#B8DDFF',
+  				300: '#87C8FF',
+  				400: '#4FA8FF',
+  				500: '#2B86FF',
+  				600: '#0B72B9', // Primary
+  				700: '#0A5A8F',
+  				800: '#0F4973',
+  				900: '#134061',
+  			},
+  			gold: {
+  				DEFAULT: '#E6C36A', // Light Golden
+  				50: '#FDF9F0',
+  				100: '#FAF0D9',
+  				200: '#F4E0B2',
+  				300: '#EDCA81',
+  				400: '#E6C36A', // Primary
+  				500: '#DFB553',
+  				600: '#CB9F48',
+  				700: '#A98240',
+  				800: '#886A3A',
+  				900: '#705632',
+  			},
+  			ink: '#0F172A', // Neutral dark
+  			bg: '#F8FAFC', // Neutral light
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',
   			card: {
@@ -54,7 +83,16 @@ export default {
   		borderRadius: {
   			lg: 'var(--radius)',
   			md: 'calc(var(--radius) - 2px)',
-  			sm: 'calc(var(--radius) - 4px)'
+  			sm: 'calc(var(--radius) - 4px)',
+  			xl: '1rem',
+  			'2xl': '1.25rem',
+  		},
+  		boxShadow: {
+  			card: '0 6px 20px rgba(0,0,0,0.08)',
+  			header: '0 4px 14px rgba(0,0,0,0.06)',
+  		},
+  		ringColor: {
+  			DEFAULT: '#E6C36A', // Golden focus rings
   		}
   	}
   },

@@ -8,6 +8,12 @@ body {
 
 @layer base {
   :root {
+    /* Brand colors */
+    --brand: #0B72B9;
+    --gold: #E6C36A;
+    --ink: #0F172A;
+    --bg: #F8FAFC;
+    
     --background: 0 0% 100%;
     --foreground: 240 10% 3.9%;
     --card: 0 0% 100%;
@@ -68,5 +74,15 @@ body {
   }
   body {
     @apply bg-background text-foreground;
+  }
+  
+  /* Focus states using golden ring */
+  :focus-visible {
+    @apply outline-none ring-2 ring-gold ring-offset-2;
+  }
+  
+  /* Skip to content link for accessibility */
+  .skip-to-content {
+    @apply absolute left-0 top-0 -translate-y-full bg-brand text-white px-4 py-2 rounded-br-lg transition-transform focus:translate-y-0 z-50;
   }
 }
