@@ -23,13 +23,16 @@ model User {
   role          Role      @default(USER)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
-  accounts      Account[]
-  sessions      Session[]
-  orders        Order[]
-  reviews       Review[]
-  cart          Cart?
-  addresses     Address[]
-  wishlistItems WishlistItem[]
+  accounts         Account[]
+  sessions         Session[]
+  orders           Order[]
+  reviews          Review[]
+  cart             Cart?
+  addresses        Address[]
+  wishlistItems    WishlistItem[]
+  promotionUsages  PromotionUsage[]
+  assignedCoupons  Coupon[]
+  customerSegments CustomerSegment[] @relation("CustomerSegmentUsers")
 }
 
 model Account {
@@ -95,7 +98,12 @@ model Order {
   shippingAddress Address     @relation(fields: [addressId], references: [id])
   addressId       String
   total           Float
+  subtotal        Float?      // Subtotal before discounts
+  discountAmount  Float?      // Total discount applied
+  taxAmount       Float?      // Tax amount
+  shippingAmount  Float?      // Shipping cost
   stripePaymentId String?
+  appliedPromotions PromotionUsage[]
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
 }
@@ -177,4 +185,166 @@ enum OrderStatus {
   SHIPPED
   DELIVERED
   CANCELLED
+}
+
+enum PromotionType {
+  PERCENTAGE
+  FIXED_AMOUNT
+  BUY_X_GET_Y
+  FREE_SHIPPING
+  BULK_DISCOUNT
+}
+
+enum PromotionTargetType {
+  CART_TOTAL
+  PRODUCT_CATEGORY
+  SPECIFIC_PRODUCT
+  CUSTOMER_SEGMENT
+  FIRST_ORDER
+  BULK_ORDER
+}
+
+enum PromotionStatus {
+  ACTIVE
+  INACTIVE
+  SCHEDULED
+  EXPIRED
+}
+
+model Promotion {
+  id               String             @id @default(cuid())
+  name             String
+  description      String?
+  code             String?            @unique // Coupon code (optional)
+  type             PromotionType
+  targetType       PromotionTargetType
+  status           PromotionStatus    @default(ACTIVE)
+  
+  // Promotion value
+  discountValue    Float              // Percentage (0-100) or fixed amount
+  maxDiscountAmount Float?            // Maximum discount for percentage promotions
+  
+  // Conditions
+  minimumOrderValue Float?            // Minimum cart value
+  maximumOrderValue Float?            // Maximum cart value
+  minimumQuantity   Int?              // Minimum quantity of items
+  maximumQuantity   Int?              // Maximum quantity of items
+  
+  // Usage limits
+  usageLimit       Int?               // Total usage limit
+  usageCount       Int               @default(0)
+  usageLimitPerCustomer Int?          // Per customer usage limit
+  
+  // Date constraints
+  startDate        DateTime?
+  endDate          DateTime?
+  
+  // Target constraints
+  applicableProducts String[]         // Product IDs (for specific products)
+  applicableCategories String[]       // Category IDs (for categories)
+  customerSegments String[]           // Customer segments/roles
+  excludeProducts  String[]           // Excluded product IDs
+  excludeCategories String[]          // Excluded category IDs
+  
+  // Buy X Get Y specific
+  buyQuantity      Int?               // Buy X quantity
+  getQuantity      Int?               // Get Y quantity
+  getDiscountPercent Float?           // Discount on Y items
+  
+  // Stackability
+  stackable        Boolean           @default(false)
+  priority         Int               @default(0)
+  
+  // Metadata
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  createdBy        String?           // Admin user ID
+  
+  // Relations
+  usages           PromotionUsage[]
+  cartRules        CartRule[]
+  coupons          Coupon[]
+}
+
+model PromotionUsage {
+  id           String    @id @default(cuid())
+  promotionId  String
+  promotion    Promotion @relation(fields: [promotionId], references: [id], onDelete: Cascade)
+  userId       String?
+  user         User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+  orderId      String?
+  order        Order?    @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  discountAmount Float
+  usedAt       DateTime  @default(now())
+  
+  @@index([promotionId, userId])
+}
+
+model CartRule {
+  id               String             @id @default(cuid())
+  name             String
+  description      String?
+  priority         Int               @default(0)
+  active           Boolean           @default(true)
+  
+  // Conditions (JSON for complex rules)
+  conditions       Json              // Store complex condition logic
+  
+  // Actions
+  promotionId      String?
+  promotion        Promotion?        @relation(fields: [promotionId], references: [id], onDelete: SetNull)
+  
+  // Alternative actions (without promotion)
+  actionType       String?           // "discount", "free_shipping", "add_product"
+  actionValue      Float?
+  actionData       Json?             // Additional action data
+  
+  // Date constraints
+  startDate        DateTime?
+  endDate          DateTime?
+  
+  // Usage tracking
+  usageCount       Int               @default(0)
+  usageLimit       Int?
+  
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  createdBy        String?
+}
+
+model CustomerSegment {
+  id           String   @id @default(cuid())
+  name         String
+  description  String?
+  criteria     Json     // JSON criteria for automatic assignment
+  isAutomatic  Boolean  @default(true)
+  
+  // Manual assignments
+  users        User[]   @relation("CustomerSegmentUsers")
+  
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Coupon {
+  id               String           @id @default(cuid())
+  code             String           @unique
+  promotionId      String
+  promotion        Promotion        @relation(fields: [promotionId], references: [id], onDelete: Cascade)
+  
+  // Individual coupon limits
+  usageLimit       Int?
+  usageCount       Int             @default(0)
+  
+  // Customer specific
+  assignedToUserId String?
+  assignedToUser   User?           @relation(fields: [assignedToUserId], references: [id], onDelete: SetNull)
+  
+  // Date constraints (can override promotion dates)
+  startDate        DateTime?
+  endDate          DateTime?
+  
+  active           Boolean         @default(true)
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
 }

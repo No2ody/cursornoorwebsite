@@ -1,9 +1,372 @@
+/* Import Google Fonts for better typography */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Playfair+Display:wght@400;500;600;700;800;900&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* Enhanced CSS Variables for Brand Design System */
+:root {
+  /* Noor AlTayseer Brand Colors */
+  --brand-primary: #0B72B9;
+  --brand-primary-50: #E6F3FF;
+  --brand-primary-100: #CCE7FF;
+  --brand-primary-200: #99CFFF;
+  --brand-primary-300: #66B7FF;
+  --brand-primary-400: #339FFF;
+  --brand-primary-500: #0B72B9;
+  --brand-primary-600: #095A94;
+  --brand-primary-700: #07426F;
+  --brand-primary-800: #052A4A;
+  --brand-primary-900: #031225;
+  
+  --brand-gold: #E6C36A;
+  --brand-gold-50: #FEF9E7;
+  --brand-gold-100: #FDF3CF;
+  --brand-gold-200: #FBE79F;
+  --brand-gold-300: #F9DB6F;
+  --brand-gold-400: #F7CF3F;
+  --brand-gold-500: #E6C36A;
+  --brand-gold-600: #D4A843;
+  --brand-gold-700: #A08234;
+  --brand-gold-800: #6C5622;
+  --brand-gold-900: #382B11;
+  
+  /* Semantic Colors */
+  --success: #10B981;
+  --success-light: #D1FAE5;
+  --warning: #F59E0B;
+  --warning-light: #FEF3C7;
+  --error: #EF4444;
+  --error-light: #FEE2E2;
+  --info: var(--brand-primary);
+  --info-light: var(--brand-primary-100);
+  
+  /* Neutral Palette */
+  --gray-50: #F9FAFB;
+  --gray-100: #F3F4F6;
+  --gray-200: #E5E7EB;
+  --gray-300: #D1D5DB;
+  --gray-400: #9CA3AF;
+  --gray-500: #6B7280;
+  --gray-600: #4B5563;
+  --gray-700: #374151;
+  --gray-800: #1F2937;
+  --gray-900: #111827;
+  
+  /* Typography */
+  --font-display: 'Playfair Display', serif;
+  --font-body: 'Inter', sans-serif;
+  
+  /* Spacing Scale */
+  --space-xs: 0.25rem;
+  --space-sm: 0.5rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2rem;
+  --space-2xl: 3rem;
+  --space-3xl: 4rem;
+  
+  /* Border Radius */
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --radius-2xl: 1.5rem;
+  
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  --shadow-brand: 0 8px 25px -8px rgb(11 114 185 / 0.3);
+  --shadow-gold: 0 8px 25px -8px rgb(230 195 106 / 0.4);
+  
+  /* Gradients */
+  --gradient-brand: linear-gradient(135deg, var(--brand-primary) 0%, var(--brand-primary-700) 100%);
+  --gradient-gold: linear-gradient(135deg, var(--brand-gold) 0%, var(--brand-gold-700) 100%);
+  --gradient-hero: linear-gradient(135deg, var(--brand-primary) 0%, var(--brand-primary-800) 50%, var(--brand-gold) 100%);
+  --gradient-card: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+}
+
+/* Base Styles */
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
 body {
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-body);
+  line-height: 1.6;
+  color: var(--gray-800);
+  background: var(--gray-50);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Typography Enhancements */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--gray-900);
+}
+
+.display-font {
+  font-family: var(--font-display);
+}
+
+.body-font {
+  font-family: var(--font-body);
+}
+
+/* Enhanced Component Classes */
+@layer components {
+  /* Brand Buttons */
+  .btn-brand {
+    @apply bg-gradient-to-r from-brand to-brand-700 text-white font-semibold px-8 py-3 rounded-xl 
+           shadow-lg hover:shadow-brand transition-all duration-300 transform hover:-translate-y-0.5
+           focus:outline-none focus:ring-4 focus:ring-brand-200 active:scale-95;
+  }
+  
+  .btn-gold {
+    @apply bg-gradient-to-r from-gold to-gold-700 text-white font-semibold px-8 py-3 rounded-xl 
+           shadow-lg hover:shadow-gold transition-all duration-300 transform hover:-translate-y-0.5
+           focus:outline-none focus:ring-4 focus:ring-gold-200 active:scale-95;
+  }
+  
+  .btn-ghost-brand {
+    @apply bg-transparent border-2 border-brand text-brand font-semibold px-8 py-3 rounded-xl
+           hover:bg-brand hover:text-white transition-all duration-300 transform hover:-translate-y-0.5
+           focus:outline-none focus:ring-4 focus:ring-brand-200;
+  }
+  
+  /* Enhanced Cards */
+  .card-enhanced {
+    @apply bg-white rounded-2xl shadow-md border border-gray-100 p-6 
+           transition-all duration-300 hover:shadow-xl hover:-translate-y-1
+           backdrop-blur-sm;
+  }
+  
+  .card-glass {
+    @apply bg-white/80 backdrop-blur-md rounded-2xl shadow-lg border border-white/20 p-6
+           transition-all duration-300 hover:shadow-xl hover:bg-white/90;
+  }
+  
+  .card-gradient {
+    background: var(--gradient-card);
+    @apply rounded-2xl shadow-lg border border-gray-100 p-6
+           transition-all duration-300 hover:shadow-xl hover:-translate-y-1;
+  }
+  
+  /* Input Enhancements */
+  .input-enhanced {
+    @apply w-full px-4 py-3 rounded-xl border-2 border-gray-200 
+           focus:border-brand focus:ring-4 focus:ring-brand-100 
+           transition-all duration-200 placeholder:text-gray-400
+           bg-white/50 backdrop-blur-sm;
+  }
+  
+  /* Hero Section */
+  .hero-gradient {
+    background: var(--gradient-hero);
+  }
+  
+  /* Glass Morphism */
+  .glass {
+    @apply bg-white/10 backdrop-blur-md border border-white/20;
+  }
+  
+  /* Floating Animation */
+  .floating {
+    animation: floating 6s ease-in-out infinite;
+  }
+  
+  .floating-delayed {
+    animation: floating 6s ease-in-out infinite 2s;
+  }
+  
+  /* Shimmer Effect */
+  .shimmer {
+    background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%);
+    background-size: 200% 100%;
+    animation: shimmer 2s infinite;
+  }
+  
+  /* Pulse Glow */
+  .pulse-brand {
+    animation: pulse-brand 2s infinite;
+  }
+  
+  /* Text Gradients */
+  .text-gradient-brand {
+    background: var(--gradient-brand);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  
+  .text-gradient-gold {
+    background: var(--gradient-gold);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  
+  /* Navigation Enhancements */
+  .nav-link {
+    @apply relative px-4 py-2 rounded-lg transition-all duration-300 
+           hover:bg-brand-50 hover:text-brand group;
+  }
+  
+  .nav-link-active {
+    @apply bg-brand-100 text-brand;
+  }
+  
+  .nav-link::after {
+    content: '';
+    @apply absolute bottom-0 left-1/2 w-0 h-0.5 bg-brand 
+           transition-all duration-300 transform -translate-x-1/2;
+  }
+  
+  .nav-link:hover::after,
+  .nav-link-active::after {
+    @apply w-full;
+  }
+  
+  /* Product Card Enhancements */
+  .product-card {
+    @apply card-enhanced overflow-hidden cursor-pointer;
+  }
+  
+  .product-image {
+    @apply transition-transform duration-500 ease-out;
+  }
+  
+  .product-card:hover .product-image {
+    @apply scale-105;
+  }
+  
+  /* Loading States */
+  .skeleton {
+    @apply bg-gray-200 animate-pulse rounded;
+  }
+  
+  /* Focus Styles */
+  .focus-brand {
+    @apply focus:outline-none focus:ring-4 focus:ring-brand-200 focus:ring-opacity-50;
+  }
+  
+  .focus-gold {
+    @apply focus:outline-none focus:ring-4 focus:ring-gold-200 focus:ring-opacity-50;
+  }
+}
+
+/* Animations */
+@keyframes floating {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes pulse-brand {
+  0%, 100% { 
+    box-shadow: 0 0 0 0 rgba(11, 114, 185, 0.4);
+  }
+  50% { 
+    box-shadow: 0 0 0 20px rgba(11, 114, 185, 0);
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes fadeInRight {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Utility Animation Classes */
+.animate-fadeInUp {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+.animate-fadeInLeft {
+  animation: fadeInLeft 0.6s ease-out;
+}
+
+.animate-fadeInRight {
+  animation: fadeInRight 0.6s ease-out;
+}
+
+/* Delay Classes for Staggered Animations */
+.delay-100 { animation-delay: 100ms; }
+.delay-200 { animation-delay: 200ms; }
+.delay-300 { animation-delay: 300ms; }
+.delay-400 { animation-delay: 400ms; }
+.delay-500 { animation-delay: 500ms; }
+
+/* Accessibility Improvements */
+.skip-to-content {
+  @apply absolute top-0 left-0 bg-brand text-white px-4 py-2 rounded-br-lg
+         transform -translate-y-full focus:translate-y-0 z-50 transition-transform;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--gray-100);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--brand-primary);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--brand-primary-700);
+}
+
+/* Print Styles */
+@media print {
+  .no-print {
+    display: none !important;
+  }
 }
 
 @layer base {

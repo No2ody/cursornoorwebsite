@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import * as z from 'zod'
@@ -32,7 +31,6 @@ type ShippingFormValues = z.infer<typeof shippingFormSchema>
 
 export function ShippingForm() {
   const [loading, setLoading] = useState(false)
-  const router = useRouter()
   const cart = useCart()
   const { toast } = useToast()
 
@@ -71,33 +69,34 @@ export function ShippingForm() {
       const tax = subtotal * 0.1 // 10% tax
       const total = subtotal + shipping + tax
 
-      const response = await fetch('/api/orders', {
+      // Create Stripe checkout session
+      const response = await fetch('/api/stripe/checkout', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          items: cart.items,
-          shippingInfo: data,
-          subtotal,
-          tax,
-          shipping,
-          total,
+          items: cart.items.map(item => ({
+            productId: item.productId,
+            quantity: item.quantity
+          })),
+          shippingAddress: data,
+          totalAmount: total,
         }),
       })
 
       if (!response.ok) {
-        const errorText = await response.text()
-        throw new Error(`Failed to create order: ${errorText}`)
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to create checkout session')
       }
 
-      const { orderId } = await response.json()
+      const { url } = await response.json()
 
-      // Clear cart after successful order creation
+      // Clear cart and redirect to Stripe Checkout
       cart.clearCart()
-
-      // Redirect to payment page
-      router.push(`/payment/${orderId}`)
+      
+      // Redirect to Stripe Checkout
+      window.location.href = url
     } catch (error) {
       console.error('[SHIPPING_FORM]', error)
       toast({

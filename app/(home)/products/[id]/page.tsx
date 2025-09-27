@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import prisma from '@/lib/prisma'
 import { ProductGallery } from '@/components/products/product-gallery'
 import { ProductInfo } from '@/components/products/product-info'
+import { ProductSpecifications } from '@/components/products/product-specifications'
 import { ProductReviews } from '@/components/products/product-reviews'
 import { ProductRelated } from '@/components/products/product-related'
 
@@ -43,6 +44,11 @@ export default async function ProductPage(props: ProductPageProps) {
 
         {/* Product Information */}
         <ProductInfo product={product} />
+      </div>
+
+      {/* Product Specifications */}
+      <div className='mb-16'>
+        <ProductSpecifications product={product} />
       </div>
 
       {/* Reviews Section */}

@@ -13,6 +13,7 @@ import {
 import { useCart } from '@/store/use-cart'
 import { useToast } from '@/hooks/use-toast'
 import { ToastAction } from '@/components/ui/toast'
+import { SocialSharing } from './social-sharing'
 import Link from 'next/link'
 
 interface ProductInfoProps {
@@ -121,6 +122,11 @@ export function ProductInfo({ product }: ProductInfoProps) {
         >
           Add to Cart
         </Button>
+
+        {/* Social Sharing */}
+        <div className='flex items-center justify-center pt-4 border-t'>
+          <SocialSharing product={product} />
+        </div>
       </div>
     </div>
   )

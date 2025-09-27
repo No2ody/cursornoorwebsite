@@ -3,14 +3,14 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { useRouter, useSearchParams, usePathname } from 'next/navigation'
-import { Search, User, LogOut, X, Phone, Mail, LayoutDashboard, BarChart, Package, ShoppingCart, Heart } from 'lucide-react'
+import { useSearchParams, usePathname } from 'next/navigation'
+import { User, LogOut, Phone, Mail, LayoutDashboard, BarChart, Package, ShoppingCart, Heart } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { useSession, signOut } from 'next-auth/react'
 import { useCart } from '@/store/use-cart'
 import { MegaMenu } from '@/components/layout/mega-menu'
 import { CartDrawer } from '@/components/layout/cart-drawer'
+import { EnhancedSearch } from '@/components/shared/enhanced-search'
 // import { PromoBanner } from '@/components/layout/promo-banner'
 import {
   DropdownMenu,
@@ -23,7 +23,6 @@ import {
 
 export function Header() {
   const { data: session } = useSession()
-  const router = useRouter()
   const searchParams = useSearchParams()
   const pathname = usePathname()
   const cart = useCart()
@@ -60,17 +59,6 @@ export function Header() {
     fetchCategories()
   }, [])
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (searchQuery.trim()) {
-      router.push(`/products?search=${encodeURIComponent(searchQuery.trim())}`)
-    }
-  }
-
-  const clearSearch = () => {
-    setSearchQuery('')
-    router.push('/products')
-  }
 
   return (
     <>
@@ -83,22 +71,40 @@ export function Header() {
       {/* <PromoBanner /> */}
       
       <header className='fixed top-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md shadow-header'>
-        {/* Top Bar */}
-        <div className='bg-gradient-to-r from-brand to-brand-700 text-white py-2 px-4'>
-        <div className='container mx-auto flex justify-between items-center text-sm'>
-          <div className='flex items-center space-x-4'>
-            <div className='flex items-center space-x-2'>
-              <Phone className='w-4 h-4' />
-              <span>+971 50 538 2246</span>
+        {/* Enhanced Top Bar */}
+        <div className='hero-gradient text-white py-3 px-4 relative overflow-hidden'>
+          {/* Background Pattern */}
+          <div className='absolute inset-0 opacity-10'>
+            <div className='absolute inset-0' style={{
+              backgroundImage: `radial-gradient(circle at 2px 2px, white 1px, transparent 0)`,
+              backgroundSize: '30px 30px'
+            }} />
+          </div>
+          
+          <div className='container mx-auto flex justify-between items-center text-sm relative z-10'>
+            <div className='flex items-center space-x-6'>
+              <div className='flex items-center space-x-2 group'>
+                <Phone className='w-4 h-4 text-gold group-hover:scale-110 transition-transform' />
+                <span className='hover:text-gold transition-colors'>+971 50 538 2246</span>
+              </div>
+              <div className='flex items-center space-x-2 group'>
+                <Mail className='w-4 h-4 text-gold group-hover:scale-110 transition-colors' />
+                <span className='hover:text-gold transition-colors'>info@nooraltayseer.com</span>
+              </div>
             </div>
-            <div className='flex items-center space-x-2'>
-              <Mail className='w-4 h-4' />
-              <span>info@nooraltayseer.com</span>
+            
+            <div className='flex items-center space-x-4 text-xs'>
+              <span className='flex items-center gap-1'>
+                <span className='w-2 h-2 bg-gold rounded-full animate-pulse' />
+                Free Installation
+              </span>
+              <span className='flex items-center gap-1'>
+                <span className='w-2 h-2 bg-gold rounded-full animate-pulse' />
+                2 Year Warranty
+              </span>
             </div>
           </div>
-
         </div>
-      </div>
 
       {/* Main Navigation */}
       <div className='container mx-auto px-4 py-4'>
@@ -118,29 +124,13 @@ export function Header() {
             </div>
           </Link>
 
-          {/* Search Bar */}
+          {/* Enhanced Search Bar */}
           <div className='hidden sm:block flex-1 max-w-2xl mx-8'>
-            <form onSubmit={handleSearch} className='relative'>
-              <Input
-                type='text'
-                placeholder='Search products...'
-                className='w-full pl-10 pr-10 py-3 rounded-full border-2 border-gray-200 focus:border-brand transition-all duration-300'
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-              <Search className='absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400' />
-              {searchQuery && (
-                <Button
-                  type='button'
-                  variant='ghost'
-                  size='icon'
-                  className='absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 hover:bg-transparent'
-                  onClick={clearSearch}
-                >
-                  <X className='h-4 w-4 text-gray-400' />
-                </Button>
-              )}
-            </form>
+            <EnhancedSearch
+              value={searchQuery}
+              onValueChange={setSearchQuery}
+              placeholder="Search products..."
+            />
           </div>
 
           {/* Desktop Navigation */}
@@ -321,9 +311,11 @@ export function Header() {
             )}
           </div>
 
-          {/* Mobile Menu Button */}
+          {/* Mobile Menu Button - TODO: Implement mobile menu */}
           <button className='md:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors'>
-            <Search className='h-6 w-6' />
+            <svg className='h-6 w-6' fill='none' viewBox='0 0 24 24' stroke='currentColor'>
+              <path strokeLinecap='round' strokeLinejoin='round' strokeWidth={2} d='M4 6h16M4 12h16M4 18h16' />
+            </svg>
           </button>
         </div>
       </div>

@@ -4,7 +4,7 @@ import { useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
 // Removed framer-motion for build compatibility
 import { ProductGrid } from '@/components/products/product-grid'
-import { ProductSidebar } from '@/components/products/product-sidebar'
+import { EnhancedProductSidebar } from '@/components/products/enhanced-product-sidebar'
 import { Product } from '@prisma/client'
 
 export default function ProductsPage() {
@@ -49,85 +49,113 @@ export default function ProductsPage() {
   }, [category, search, minPrice, maxPrice, sort, currentPage])
 
   return (
-    <div className='min-h-screen bg-gradient-to-br from-gray-50 via-white to-brand-50'>
-      {/* Hero Section */}
-      <div className='bg-gradient-to-r from-brand to-brand-700 text-white py-16 pt-24'>
-        <div className='container mx-auto px-4'>
-          <div className='text-center'>
-            <h1 className='text-4xl md:text-5xl font-bold mb-4'>Our Products</h1>
-            <p className='text-xl text-brand-100 max-w-2xl mx-auto'>
-              Discover our comprehensive collection of premium LED lighting and bathroom fixtures
+    <div className='min-h-screen'>
+      {/* Enhanced Hero Section */}
+      <section className="hero-gradient text-white overflow-hidden relative pt-32 pb-20">
+        {/* Background Pattern */}
+        <div className='absolute inset-0 opacity-10'>
+          <div className='absolute inset-0' style={{
+            backgroundImage: `radial-gradient(circle at 2px 2px, white 1px, transparent 0)`,
+            backgroundSize: '50px 50px'
+          }} />
+        </div>
+        
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="text-center mb-16 animate-fadeInUp">
+            <span className="inline-block bg-white/20 backdrop-blur-sm text-gold px-6 py-3 rounded-full text-sm font-medium mb-6">
+              ✨ Premium Quality Collection
+            </span>
+            <h1 className="display-font text-5xl md:text-7xl font-bold mb-6 leading-tight">
+              Our Premium
+              <span className="text-gradient-gold block">Products</span>
+            </h1>
+            <p className="text-xl md:text-2xl text-blue-100 leading-relaxed max-w-4xl mx-auto mb-12">
+              Discover our comprehensive collection of premium LED lighting solutions and luxury bathroom fixtures. 
+              Professional quality meets elegant design.
             </p>
           </div>
         </div>
-      </div>
+        
+        {/* Wave Transition */}
+        <div className='absolute bottom-0 left-0 right-0'>
+          <svg 
+            viewBox="0 0 1200 120" 
+            preserveAspectRatio="none" 
+            className='relative block w-full h-16 fill-gray-50'
+          >
+            <path d="M985.66,92.83C906.67,72,823.78,31,743.84,14.19c-82.26-17.34-168.06-16.33-250.45.39-57.84,11.73-114,31.07-172,41.86A600.21,600.21,0,0,1,0,27.35V120H1200V95.8C1132.19,118.92,1055.71,111.31,985.66,92.83Z"></path>
+          </svg>
+        </div>
+      </section>
 
       {/* Main Content */}
-      <div className='container mx-auto px-4 py-12'>
-        <div className='flex flex-col lg:flex-row gap-8'>
-          {/* Sidebar with Enhanced Design */}
-          <aside className='w-full lg:w-80'>
-            <div className='bg-white rounded-2xl shadow-card border border-gray-100 p-6 mb-6'>
-              <h2 className='text-xl font-semibold text-ink mb-6 flex items-center gap-2'>
-                <div className='w-1 h-6 bg-brand rounded-full'></div>
-                Filter Products
-              </h2>
-              <ProductSidebar />
-            </div>
-            
-            {/* Professional Info Cards */}
-            <div className='space-y-4'>
-              <div className='bg-gradient-to-br from-brand to-brand-700 rounded-2xl p-6 text-white'>
-                <h3 className='font-semibold mb-2'>Expert Consultation</h3>
-                <p className='text-sm text-brand-100 mb-3'>
-                  Need help choosing the right products? Our lighting experts are here to help.
-                </p>
-                <button className='bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all'>
-                  Get Free Consultation
-                </button>
+      <section className="py-20 bg-white">
+        <div className='container mx-auto px-4 sm:px-6 lg:px-8'>
+          <div className='flex flex-col lg:flex-row gap-8'>
+            {/* Enhanced Sidebar */}
+            <aside className='w-full lg:w-80'>
+              <div className='card-enhanced p-6 mb-6'>
+                <h2 className='text-xl font-semibold text-gray-900 mb-6 flex items-center gap-2 display-font'>
+                  <div className='w-1 h-6 bg-brand rounded-full'></div>
+                  Filter Products
+                </h2>
+                <EnhancedProductSidebar />
               </div>
+              
+              {/* Professional Info Cards */}
+              <div className='space-y-4'>
+                <div className='card-enhanced bg-gradient-to-br from-brand to-brand-700 p-6 text-white animate-fadeInLeft'>
+                  <h3 className='font-semibold mb-2 display-font'>Expert Consultation</h3>
+                  <p className='text-sm text-blue-100 mb-4'>
+                    Need help choosing the right products? Our lighting experts are here to help.
+                  </p>
+                  <button className='btn-ghost-brand border-white/30 text-white hover:bg-white/10 text-sm'>
+                    Get Free Consultation
+                  </button>
+                </div>
 
-              <div className='bg-gradient-to-br from-gold to-gold-700 rounded-2xl p-6 text-white'>
-                <h3 className='font-semibold mb-2'>Professional Installation</h3>
-                <p className='text-sm text-gold-100 mb-3'>
-                  Professional installation services available for all products.
-                </p>
-                <button className='bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all'>
-                  Learn More
-                </button>
-              </div>
+                <div className='card-enhanced bg-gradient-to-br from-gold to-gold-700 p-6 text-white animate-fadeInLeft delay-100'>
+                  <h3 className='font-semibold mb-2 display-font'>Professional Installation</h3>
+                  <p className='text-sm text-yellow-100 mb-4'>
+                    Professional installation services available for all products.
+                  </p>
+                  <button className='btn-ghost-brand border-white/30 text-white hover:bg-white/10 text-sm'>
+                    Learn More
+                  </button>
+                </div>
 
-              <div className='bg-white rounded-2xl p-6 border border-gray-100 shadow-card'>
-                <h3 className='font-semibold text-ink mb-2'>Need Help?</h3>
-                <p className='text-sm text-gray-600 mb-3'>
-                  Contact our support team for product recommendations.
-                </p>
-                <div className='flex flex-col gap-2'>
-                  <a href='tel:+971505382246' className='text-brand hover:text-brand-700 text-sm font-medium'>
-                    📞 +971 50 538 2246
-                  </a>
-                  <a href='mailto:info@nooraltayseer.com' className='text-brand hover:text-brand-700 text-sm font-medium'>
-                    ✉️ info@nooraltayseer.com
-                  </a>
+                <div className='card-enhanced p-6 animate-fadeInLeft delay-200'>
+                  <h3 className='font-semibold text-gray-900 mb-2 display-font'>Need Help?</h3>
+                  <p className='text-sm text-gray-600 mb-4'>
+                    Contact our support team for product recommendations.
+                  </p>
+                  <div className='flex flex-col gap-3'>
+                    <a href='tel:+971505382246' className='flex items-center gap-2 text-brand hover:text-brand-700 text-sm font-medium transition-colors'>
+                      <span className='text-lg'>📞</span> +971 50 538 2246
+                    </a>
+                    <a href='mailto:info@nooraltayseer.com' className='flex items-center gap-2 text-brand hover:text-brand-700 text-sm font-medium transition-colors'>
+                      <span className='text-lg'>✉️</span> info@nooraltayseer.com
+                    </a>
+                  </div>
                 </div>
               </div>
-            </div>
-          </aside>
+            </aside>
 
-          {/* Main Product Grid */}
-          <main className='flex-1'>
-            <div className='bg-white rounded-2xl shadow-card border border-gray-100 p-6 min-h-[600px]'>
-              <ProductGrid
-                products={products}
-                loading={loading}
-                currentPage={currentPage}
-                totalPages={totalPages}
-                onPageChange={setCurrentPage}
-              />
-            </div>
-          </main>
+            {/* Main Product Grid */}
+            <main className='flex-1'>
+              <div className='card-enhanced p-6 min-h-[600px] animate-fadeInRight'>
+                <ProductGrid
+                  products={products}
+                  loading={loading}
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  onPageChange={setCurrentPage}
+                />
+              </div>
+            </main>
+          </div>
         </div>
-      </div>
+      </section>
     </div>
   )
 }
