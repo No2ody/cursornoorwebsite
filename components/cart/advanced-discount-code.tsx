@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -59,32 +59,53 @@ export function AdvancedDiscountCode({
   const [calculationResult, setCalculationResult] = useState<CartCalculationResult | null>(null)
   const { toast } = useToast()
 
-  // Calculate promotions whenever items or coupons change
+  // Calculate promotions when items or coupons change
   useEffect(() => {
-    if (items.length > 0) {
-      calculatePromotions()
-    } else {
-      // Reset calculation result when cart is empty
-      setCalculationResult({
-        subtotal: 0,
-        appliedPromotions: [],
-        totalDiscount: 0,
-        shippingCost: 0,
-        taxAmount: 0,
-        total: 0
-      })
-      onPromotionsCalculated({
-        subtotal: 0,
-        appliedPromotions: [],
-        totalDiscount: 0,
-        shippingCost: 0,
-        taxAmount: 0,
-        total: 0
-      })
-    }
-  }, [items, appliedCoupons]) // eslint-disable-line react-hooks/exhaustive-deps
+    const calculateTotals = async () => {
+      if (items.length === 0) {
+        // Reset calculation result when cart is empty
+        const emptyResult: CartCalculationResult = {
+          subtotal: 0,
+          appliedPromotions: [],
+          totalDiscount: 0,
+          shippingCost: 0,
+          taxAmount: 0,
+          total: 0
+        }
+        setCalculationResult(emptyResult)
+        onPromotionsCalculated(emptyResult)
+        return
+      }
 
-  const calculatePromotions = async () => {
+      if (appliedCoupons.length > 0) {
+        // Only calculate when there are applied coupons
+        await calculatePromotions()
+      } else {
+        // Calculate basic totals without promotions
+        const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0)
+        const shippingCost = subtotal >= 200 ? 0 : 10 // Free shipping over AED 200
+        const taxAmount = subtotal * 0.1
+        const total = subtotal + shippingCost + taxAmount
+        
+        const basicResult: CartCalculationResult = {
+          subtotal,
+          appliedPromotions: [],
+          totalDiscount: 0,
+          shippingCost,
+          taxAmount,
+          total
+        }
+        setCalculationResult(basicResult)
+        onPromotionsCalculated(basicResult)
+      }
+    }
+
+    calculateTotals()
+  }, [items, appliedCoupons, onPromotionsCalculated, calculatePromotions])
+
+  const calculatePromotions = useCallback(async () => {
+    if (isCalculating) return // Prevent multiple simultaneous calculations
+    
     setIsCalculating(true)
     try {
       const response = await fetch('/api/promotions/calculate', {
@@ -99,21 +120,58 @@ export function AdvancedDiscountCode({
       })
 
       if (response.ok) {
-        const result = await response.json()
+        const result: CartCalculationResult = await response.json()
         setCalculationResult(result)
         onPromotionsCalculated(result)
       } else {
-        console.error('Failed to calculate promotions')
+        const errorData = await response.json().catch(() => ({}))
+        console.error('Failed to calculate promotions:', errorData)
+        
+        // Fallback to basic calculation
+        const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0)
+        const shippingCost = subtotal >= 200 ? 0 : 10
+        const taxAmount = subtotal * 0.1
+        const total = subtotal + shippingCost + taxAmount
+        
+        const fallbackResult: CartCalculationResult = {
+          subtotal,
+          appliedPromotions: [],
+          totalDiscount: 0,
+          shippingCost,
+          taxAmount,
+          total
+        }
+        setCalculationResult(fallbackResult)
+        onPromotionsCalculated(fallbackResult)
       }
     } catch (calculationError) {
       console.error('Error calculating promotions:', calculationError)
+      
+      // Fallback to basic calculation on error
+      const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0)
+      const shippingCost = subtotal >= 200 ? 0 : 10
+      const taxAmount = subtotal * 0.1
+      const total = subtotal + shippingCost + taxAmount
+      
+      const fallbackResult: CartCalculationResult = {
+        subtotal,
+        appliedPromotions: [],
+        totalDiscount: 0,
+        shippingCost,
+        taxAmount,
+        total
+      }
+      setCalculationResult(fallbackResult)
+      onPromotionsCalculated(fallbackResult)
     } finally {
       setIsCalculating(false)
     }
-  }
+  }, [items, appliedCoupons, isCalculating, onPromotionsCalculated])
 
-  const validateAndApplyCoupon = async () => {
-    if (!code.trim()) {
+  const validateAndApplyCoupon = useCallback(async () => {
+    const trimmedCode = code.trim().toUpperCase()
+    
+    if (!trimmedCode) {
       toast({
         title: 'Invalid Code',
         description: 'Please enter a coupon code.',
@@ -122,7 +180,7 @@ export function AdvancedDiscountCode({
       return
     }
 
-    if (appliedCoupons.includes(code.trim().toUpperCase())) {
+    if (appliedCoupons.includes(trimmedCode)) {
       toast({
         title: 'Already Applied',
         description: 'This coupon code is already applied.',
@@ -130,6 +188,8 @@ export function AdvancedDiscountCode({
       })
       return
     }
+
+    if (isLoading) return // Prevent multiple simultaneous requests
 
     setIsLoading(true)
     try {
@@ -140,9 +200,14 @@ export function AdvancedDiscountCode({
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          code: code.trim().toUpperCase()
+          code: trimmedCode
         }),
       })
+
+      if (!validateResponse.ok) {
+        const errorData = await validateResponse.json().catch(() => ({}))
+        throw new Error(errorData.message || 'Failed to validate coupon')
+      }
 
       const validation = await validateResponse.json()
 
@@ -156,28 +221,28 @@ export function AdvancedDiscountCode({
       }
 
       // Add the coupon and recalculate
-      const newCoupons = [...appliedCoupons, code.trim().toUpperCase()]
+      const newCoupons = [...appliedCoupons, trimmedCode]
       onCouponsChange(newCoupons)
       setCode('')
 
       toast({
         title: 'Coupon Applied!',
-        description: `Successfully applied coupon: ${code.trim().toUpperCase()}`,
+        description: `Successfully applied coupon: ${trimmedCode}`,
       })
 
     } catch (validationError) {
       console.error('Validation error:', validationError)
       toast({
         title: 'Error',
-        description: 'Failed to apply coupon code. Please try again.',
+        description: validationError instanceof Error ? validationError.message : 'Failed to apply coupon code. Please try again.',
         variant: 'destructive'
       })
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [code, appliedCoupons, isLoading, onCouponsChange, toast])
 
-  const removeCoupon = (couponCode: string) => {
+  const removeCoupon = useCallback((couponCode: string) => {
     const newCoupons = appliedCoupons.filter(c => c !== couponCode)
     onCouponsChange(newCoupons)
     
@@ -185,7 +250,25 @@ export function AdvancedDiscountCode({
       title: 'Coupon Removed',
       description: `Removed coupon: ${couponCode}`,
     })
-  }
+  }, [appliedCoupons, onCouponsChange, toast])
+
+  // Memoized handlers for better performance
+  const handleCodeChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value?.toUpperCase() || ''
+    setCode(value)
+  }, [])
+
+  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault()
+      validateAndApplyCoupon()
+    }
+  }, [validateAndApplyCoupon])
+
+  // Memoized computed values
+  const isSubmitDisabled = useMemo(() => {
+    return isLoading || !code.trim()
+  }, [isLoading, code])
 
   return (
     <Card className="card-enhanced">
@@ -206,18 +289,14 @@ export function AdvancedDiscountCode({
               id="coupon-code"
               placeholder="Enter coupon code"
               value={code}
-              onChange={(e) => setCode(e.target.value.toUpperCase())}
+              onChange={handleCodeChange}
               className="input-enhanced"
               disabled={isLoading}
-              onKeyPress={(e) => {
-                if (e.key === 'Enter') {
-                  validateAndApplyCoupon()
-                }
-              }}
+              onKeyDown={handleKeyDown}
             />
             <Button 
               onClick={validateAndApplyCoupon} 
-              disabled={isLoading || !code.trim()} 
+              disabled={isSubmitDisabled} 
               className="btn-brand"
             >
               {isLoading ? (
@@ -287,7 +366,25 @@ export function AdvancedDiscountCode({
           </div>
         )}
 
-        {/* Available Promotions */}
+        {/* Promotion Info */}
+        {appliedCoupons.length === 0 && items.length > 0 && (
+          <div className="space-y-3">
+            <Label className="text-sm font-medium flex items-center gap-2">
+              <Percent className="h-4 w-4 text-brand" />
+              Have a Coupon Code?
+            </Label>
+            <div className="p-4 bg-gradient-to-r from-brand-50 to-gold-50 border border-brand-200 rounded-lg">
+              <p className="text-sm text-brand-700 mb-2">
+                Enter your coupon code above to unlock exclusive discounts and promotions!
+              </p>
+              <div className="text-xs text-brand-600">
+                Try: <code className="bg-white px-2 py-1 rounded">WELCOME15</code>, <code className="bg-white px-2 py-1 rounded">LIGHT20</code>, or <code className="bg-white px-2 py-1 rounded">SAVE50</code>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Available Promotions (only shown after calculation) */}
         {calculationResult && calculationResult.availablePromotions && calculationResult.availablePromotions.length > 0 && (
           <div className="space-y-3">
             <Label className="text-sm font-medium flex items-center gap-2">

@@ -4,7 +4,8 @@ import { useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
 // Removed framer-motion for build compatibility
 import { ProductGrid } from '@/components/products/product-grid'
-import { EnhancedProductSidebar } from '@/components/products/enhanced-product-sidebar'
+import { AdvancedFilterSidebar } from '@/components/products/advanced-filter-sidebar'
+import { MobileFilterDrawer } from '@/components/products/mobile-filter-drawer'
 import { Product } from '@prisma/client'
 
 export default function ProductsPage() {
@@ -18,6 +19,9 @@ export default function ProductsPage() {
   const search = searchParams.get('search')
   const minPrice = searchParams.get('minPrice')
   const maxPrice = searchParams.get('maxPrice')
+  const brands = searchParams.get('brands')
+  const rating = searchParams.get('rating')
+  const availability = searchParams.get('availability')
   const sort = searchParams.get('sort')
 
   useEffect(() => {
@@ -30,23 +34,27 @@ export default function ProductsPage() {
           ...(search && { search }),
           ...(minPrice && { minPrice }),
           ...(maxPrice && { maxPrice }),
+          ...(brands && { brands }),
+          ...(rating && { rating }),
+          ...(availability && { availability }),
           ...(sort && { sort }),
         })
 
         const response = await fetch(`/api/products?${queryParams}`)
         const data = await response.json()
 
-        setProducts(data.products)
-        setTotalPages(Math.ceil(data.total / data.perPage))
+        setProducts(data.products || [])
+        setTotalPages(Math.ceil((data.total || 0) / (data.perPage || 12)))
       } catch (error) {
         console.error('Error fetching products:', error)
+        setProducts([])
       } finally {
         setLoading(false)
       }
     }
 
     fetchProducts()
-  }, [category, search, minPrice, maxPrice, sort, currentPage])
+  }, [category, search, minPrice, maxPrice, brands, rating, availability, sort, currentPage])
 
   return (
     <div className='min-h-screen'>
@@ -99,7 +107,7 @@ export default function ProductsPage() {
                   <div className='w-1 h-6 bg-brand rounded-full'></div>
                   Filter Products
                 </h2>
-                <EnhancedProductSidebar />
+                <AdvancedFilterSidebar />
               </div>
               
               {/* Professional Info Cards */}
@@ -143,6 +151,11 @@ export default function ProductsPage() {
 
             {/* Main Product Grid */}
             <main className='flex-1'>
+              {/* Mobile Filter Button */}
+              <div className='lg:hidden mb-6 animate-fadeInRight'>
+                <MobileFilterDrawer />
+              </div>
+              
               <div className='card-enhanced p-6 min-h-[600px] animate-fadeInRight'>
                 <ProductGrid
                   products={products}

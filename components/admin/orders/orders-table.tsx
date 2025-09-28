@@ -38,6 +38,7 @@ async function getOrders({
   if (search) {
     where.OR = [
       { id: { contains: search, mode: 'insensitive' } },
+      { orderNumber: { contains: search, mode: 'insensitive' } },
       { user: { name: { contains: search, mode: 'insensitive' } } },
       { user: { email: { contains: search, mode: 'insensitive' } } },
     ]
@@ -129,10 +130,24 @@ export async function OrdersTable(props: OrdersTableProps) {
         return 'bg-purple-100 text-purple-800 border-purple-200'
       case 'SHIPPED':
         return 'bg-indigo-100 text-indigo-800 border-indigo-200'
+      case 'OUT_FOR_DELIVERY':
+        return 'bg-orange-100 text-orange-800 border-orange-200'
       case 'DELIVERED':
         return 'bg-green-100 text-green-800 border-green-200'
       case 'CANCELLED':
         return 'bg-red-100 text-red-800 border-red-200'
+      case 'REFUNDED':
+        return 'bg-gray-100 text-gray-800 border-gray-200'
+      case 'PARTIALLY_REFUNDED':
+        return 'bg-yellow-100 text-yellow-800 border-yellow-200'
+      case 'RETURN_REQUESTED':
+        return 'bg-amber-100 text-amber-800 border-amber-200'
+      case 'RETURN_APPROVED':
+        return 'bg-teal-100 text-teal-800 border-teal-200'
+      case 'RETURN_REJECTED':
+        return 'bg-red-100 text-red-800 border-red-200'
+      case 'RETURNED':
+        return 'bg-gray-100 text-gray-800 border-gray-200'
       default:
         return 'bg-gray-100 text-gray-800 border-gray-200'
     }
@@ -160,7 +175,7 @@ export async function OrdersTable(props: OrdersTableProps) {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Order ID</TableHead>
+              <TableHead>Order Number</TableHead>
               <TableHead>Customer</TableHead>
               <TableHead>Items</TableHead>
               <TableHead>Total</TableHead>
@@ -172,10 +187,13 @@ export async function OrdersTable(props: OrdersTableProps) {
           <TableBody>
             {orders.map((order) => (
               <TableRow key={order.id} className='hover:bg-gray-50'>
-                {/* Order ID */}
+                {/* Order Number */}
                 <TableCell>
                   <div className='font-medium text-gray-900'>
-                    #{order.id.slice(-8).toUpperCase()}
+                    #{order.orderNumber}
+                  </div>
+                  <div className='text-xs text-gray-500'>
+                    ID: {order.id.slice(-8)}
                   </div>
                 </TableCell>
 

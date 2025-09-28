@@ -7,7 +7,6 @@ import Image from 'next/image'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Separator } from '@/components/ui/separator'
 import { Badge } from '@/components/ui/badge'
-import { Loader2 } from 'lucide-react'
 
 interface CartCalculationResult {
   subtotal: number
@@ -29,81 +28,36 @@ export function OrderSummary() {
   const cart = useCart()
   const items = cart.items
   const [calculationResult, setCalculationResult] = useState<CartCalculationResult | null>(null)
-  const [isCalculating, setIsCalculating] = useState(false)
 
-  // Convert cart items to the format expected by the promotion system
-  const cartItems = items.map(item => ({
-    productId: item.productId,
-    quantity: item.quantity,
-    price: item.price
-  }))
-
-  // Calculate promotions
+  // Calculate basic totals (no automatic promotion calculation)
   useEffect(() => {
-    const calculatePromotions = async () => {
-      if (items.length === 0) {
-        setCalculationResult({
-          subtotal: 0,
-          appliedPromotions: [],
-          totalDiscount: 0,
-          shippingCost: 0,
-          taxAmount: 0,
-          total: 0
-        })
-        return
-      }
-
-      setIsCalculating(true)
-      try {
-        const response = await fetch('/api/promotions/calculate', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            items: cartItems,
-            appliedCoupons: []
-          }),
-        })
-
-        if (response.ok) {
-          const result = await response.json()
-          setCalculationResult(result)
-        } else {
-          // Fallback calculation
-          const subtotal = items.reduce((total, item) => total + item.price * item.quantity, 0)
-          const shipping = 10
-          const tax = subtotal * 0.1
-          setCalculationResult({
-            subtotal,
-            appliedPromotions: [],
-            totalDiscount: 0,
-            shippingCost: shipping,
-            taxAmount: tax,
-            total: subtotal + shipping + tax
-          })
-        }
-      } catch (error) {
-        console.error('Error calculating promotions:', error)
-        // Fallback calculation
-        const subtotal = items.reduce((total, item) => total + item.price * item.quantity, 0)
-        const shipping = 10
-        const tax = subtotal * 0.1
-        setCalculationResult({
-          subtotal,
-          appliedPromotions: [],
-          totalDiscount: 0,
-          shippingCost: shipping,
-          taxAmount: tax,
-          total: subtotal + shipping + tax
-        })
-      } finally {
-        setIsCalculating(false)
-      }
+    if (items.length === 0) {
+      setCalculationResult({
+        subtotal: 0,
+        appliedPromotions: [],
+        totalDiscount: 0,
+        shippingCost: 0,
+        taxAmount: 0,
+        total: 0
+      })
+      return
     }
 
-    calculatePromotions()
-  }, [items, cartItems]) // eslint-disable-line react-hooks/exhaustive-deps
+    // Calculate basic totals without promotions
+    const subtotal = items.reduce((total, item) => total + item.price * item.quantity, 0)
+    const shippingCost = subtotal >= 200 ? 0 : 10 // Free shipping over AED 200
+    const taxAmount = subtotal * 0.1
+    const total = subtotal + shippingCost + taxAmount
+
+    setCalculationResult({
+      subtotal,
+      appliedPromotions: [],
+      totalDiscount: 0,
+      shippingCost,
+      taxAmount,
+      total
+    })
+  }, [items])
 
   // Fallback values
   const fallbackSubtotal = items.reduce((total, item) => total + item.price * item.quantity, 0)
@@ -147,12 +101,6 @@ export function OrderSummary() {
       <Separator />
 
       <div className='space-y-4'>
-        {isCalculating && (
-          <div className="flex items-center justify-center py-4">
-            <Loader2 className="h-4 w-4 animate-spin text-brand mr-2" />
-            <span className="text-sm text-gray-600">Calculating promotions...</span>
-          </div>
-        )}
         
         {/* Applied Promotions */}
         {displayValues.appliedPromotions.length > 0 && (

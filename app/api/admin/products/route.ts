@@ -9,6 +9,7 @@ const createProductSchema = z.object({
   price: z.number().min(0.01, 'Price must be greater than 0'),
   stock: z.number().int().min(0, 'Stock must be 0 or greater'),
   categoryId: z.string().min(1, 'Category ID is required'),
+  brandId: z.string().optional(),
   images: z.array(z.string().url()).min(1, 'At least one image is required'),
 })
 
@@ -46,10 +47,16 @@ export async function POST(request: Request) {
         price: validatedData.price,
         stock: validatedData.stock,
         categoryId: validatedData.categoryId,
+        brandId: validatedData.brandId || null,
         images: validatedData.images,
       },
       include: {
         category: {
+          select: {
+            name: true,
+          },
+        },
+        brand: {
           select: {
             name: true,
           },
@@ -135,6 +142,11 @@ export async function GET(request: Request) {
         where,
         include: {
           category: {
+            select: {
+              name: true,
+            },
+          },
+          brand: {
             select: {
               name: true,
             },

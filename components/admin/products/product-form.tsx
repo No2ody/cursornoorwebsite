@@ -34,6 +34,7 @@ const productFormSchema = z.object({
   price: z.coerce.number().min(0.01, 'Price must be greater than 0'),
   stock: z.coerce.number().int().min(0, 'Stock must be 0 or greater'),
   categoryId: z.string().min(1, 'Please select a category'),
+  brandId: z.string().optional(),
   images: z.array(z.string().url()).optional().default([]),
 })
 
@@ -44,9 +45,15 @@ interface Category {
   name: string
 }
 
+interface Brand {
+  id: string
+  name: string
+}
+
 export function ProductForm() {
   const [loading, setLoading] = useState(false)
   const [categories, setCategories] = useState<Category[]>([])
+  const [brands, setBrands] = useState<Brand[]>([])
   const router = useRouter()
   const { toast } = useToast()
 
@@ -64,22 +71,29 @@ export function ProductForm() {
 
   // Fetch categories on component mount
   useEffect(() => {
-    const fetchCategories = async () => {
+    const fetchData = async () => {
       try {
-        const response = await fetch('/api/categories')
-        const data = await response.json()
-        setCategories(data)
+        const [categoriesResponse, brandsResponse] = await Promise.all([
+          fetch('/api/categories'),
+          fetch('/api/brands?activeOnly=true&limit=100')
+        ])
+        
+        const categoriesData = await categoriesResponse.json()
+        const brandsData = await brandsResponse.json()
+        
+        setCategories(categoriesData)
+        setBrands(brandsData.brands || [])
       } catch (error) {
-        console.error('Error fetching categories:', error)
+        console.error('Error fetching data:', error)
         toast({
           variant: 'destructive',
           title: 'Error',
-          description: 'Failed to load categories',
+          description: 'Failed to load categories and brands',
         })
       }
     }
 
-    fetchCategories()
+    fetchData()
   }, [toast])
 
 
@@ -157,6 +171,33 @@ export function ProductForm() {
                     {categories.map((category) => (
                       <SelectItem key={category.id} value={category.id}>
                         {category.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
+          {/* Brand */}
+          <FormField
+            control={form.control}
+            name='brandId'
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Brand (Optional)</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder='Select a brand' />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="">No Brand</SelectItem>
+                    {brands.map((brand) => (
+                      <SelectItem key={brand.id} value={brand.id}>
+                        {brand.name}
                       </SelectItem>
                     ))}
                   </SelectContent>

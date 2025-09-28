@@ -11,12 +11,16 @@ import {
   Users,
   Settings,
   BarChart,
+  Tag,
+  Folder,
 } from 'lucide-react'
 
 const navigation = [
   { name: 'Dashboard', href: '/admin', icon: LayoutDashboard },
   { name: 'Analytics', href: '/admin/analytics', icon: BarChart },
   { name: 'Products', href: '/admin/products', icon: Package },
+  { name: 'Categories', href: '/admin/categories', icon: Folder },
+  { name: 'Brands', href: '/admin/brands', icon: Tag },
   { name: 'Orders', href: '/admin/orders', icon: ShoppingCart },
   { name: 'Customers', href: '/admin/customers', icon: Users },
   { name: 'Settings', href: '/admin/settings', icon: Settings },

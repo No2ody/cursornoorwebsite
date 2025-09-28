@@ -21,8 +21,34 @@ model User {
   image         String?
   password      String?
   role          Role      @default(USER)
+  
+  // Business account management
+  accountType   UserAccountType @default(INDIVIDUAL)
+  companyId     String?
+  company       Company?        @relation(fields: [companyId], references: [id])
+  companyRole   CompanyRole?
+  
+  // Profile information
+  firstName     String?
+  lastName      String?
+  phone         String?
+  jobTitle      String?
+  department    String?
+  
+  // Account status
+  isActive      Boolean         @default(true)
+  isVerified    Boolean         @default(false)
+  lastLoginAt   DateTime?
+  
+  // Invitations
+  invitedBy     String?         // User ID who invited this user
+  invitedAt     DateTime?
+  acceptedAt    DateTime?
+  
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
+  
+  // Relations
   accounts         Account[]
   sessions         Session[]
   orders           Order[]
@@ -33,6 +59,15 @@ model User {
   promotionUsages  PromotionUsage[]
   assignedCoupons  Coupon[]
   customerSegments CustomerSegment[] @relation("CustomerSegmentUsers")
+  
+  // Company relations
+  ownedCompanies   Company[]       @relation("CompanyOwner")
+  sentInvitations  UserInvitation[] @relation("InvitationSender")
+  receivedInvitations UserInvitation[] @relation("InvitationReceiver")
+  
+  @@index([companyId])
+  @@index([email])
+  @@index([isActive])
 }
 
 model Account {
@@ -62,6 +97,18 @@ model Session {
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
+model Brand {
+  id          String    @id @default(cuid())
+  name        String    @unique
+  description String?
+  logo        String?
+  website     String?
+  isActive    Boolean   @default(true)
+  products    Product[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
 model Product {
   id          String      @id @default(cuid())
   name        String
@@ -70,6 +117,8 @@ model Product {
   images      String[]
   categoryId  String
   category    Category    @relation(fields: [categoryId], references: [id])
+  brandId     String?
+  brand       Brand?      @relation(fields: [brandId], references: [id])
   stock       Int         @default(0)
   reviews       Review[]
   orderItems    OrderItem[]
@@ -81,12 +130,35 @@ model Product {
 
 model Category {
   id          String    @id @default(cuid())
-  name        String    @unique
+  name        String
+  slug        String    @unique
   description String?
   image       String?
+  isActive    Boolean   @default(true)
+  sortOrder   Int       @default(0)
+  
+  // Hierarchical structure
+  parentId    String?
+  parent      Category? @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children    Category[] @relation("CategoryHierarchy")
+  
+  // SEO and metadata
+  metaTitle       String?
+  metaDescription String?
+  metaKeywords    String?
+  
+  // Category settings
+  showInMenu      Boolean @default(true)
+  showInFooter    Boolean @default(false)
+  featuredOrder   Int?    // For featured categories
+  
   products    Product[]
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+  
+  @@unique([name, parentId])
+  @@index([parentId])
+  @@index([isActive, sortOrder])
 }
 
 model Order {
@@ -104,8 +176,34 @@ model Order {
   shippingAmount  Float?      // Shipping cost
   stripePaymentId String?
   appliedPromotions PromotionUsage[]
+  
+  // Advanced order management
+  orderNumber     String      @unique @default(cuid())
+  notes           String?     // Internal notes
+  customerNotes   String?     // Customer notes
+  trackingNumber  String?     // Shipping tracking number
+  estimatedDelivery DateTime? // Estimated delivery date
+  actualDelivery  DateTime?   // Actual delivery date
+  
+  // Cancellation
+  cancellationReason String?
+  cancelledAt        DateTime?
+  cancelledBy        String?   // User ID who cancelled
+  cancellationNotes  String?
+  
+  // Returns and Refunds
+  returns         OrderReturn[]
+  refunds         OrderRefund[]
+  
+  // Order timeline
+  timeline        OrderTimeline[]
+  
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
+  
+  @@index([status])
+  @@index([userId])
+  @@index([orderNumber])
 }
 
 model OrderItem {
@@ -174,6 +272,306 @@ model WishlistItem {
   @@unique([userId, productId])
 }
 
+model OrderReturn {
+  id              String            @id @default(cuid())
+  orderId         String
+  order           Order             @relation(fields: [orderId], references: [id])
+  returnNumber    String            @unique @default(cuid())
+  status          OrderReturnStatus @default(REQUESTED)
+  reason          String
+  description     String?
+  images          String[]          // Return item images
+  
+  // Return items
+  items           OrderReturnItem[]
+  
+  // Approval workflow
+  requestedBy     String            // User ID
+  requestedAt     DateTime          @default(now())
+  reviewedBy      String?           // Admin user ID
+  reviewedAt      DateTime?
+  reviewNotes     String?
+  
+  // Shipping
+  returnShippingLabel String?       // Return shipping label URL
+  trackingNumber      String?       // Return tracking number
+  receivedAt          DateTime?     // When return was received
+  
+  // Refund processing
+  refundAmount    Float?
+  refundProcessed Boolean           @default(false)
+  refundedAt      DateTime?
+  
+  // Related refunds
+  refunds         OrderRefund[]     @relation("OrderRefundToReturn")
+  
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  
+  @@index([orderId])
+  @@index([status])
+}
+
+model OrderReturnItem {
+  id            String      @id @default(cuid())
+  returnId      String
+  return        OrderReturn @relation(fields: [returnId], references: [id])
+  orderItemId   String
+  quantity      Int         // Quantity being returned
+  reason        String
+  condition     String?     // Condition of returned item
+  
+  @@unique([returnId, orderItemId])
+}
+
+model OrderRefund {
+  id              String           @id @default(cuid())
+  orderId         String
+  order           Order            @relation(fields: [orderId], references: [id])
+  refundNumber    String           @unique @default(cuid())
+  type            OrderRefundType  @default(PARTIAL)
+  status          OrderRefundStatus @default(PENDING)
+  
+  // Refund details
+  amount          Float
+  reason          String
+  description     String?
+  
+  // Processing
+  processedBy     String?          // Admin user ID
+  processedAt     DateTime?
+  stripeRefundId  String?          // Stripe refund ID
+  
+  // Related return (if applicable)
+  returnId        String?
+  return          OrderReturn?     @relation("OrderRefundToReturn", fields: [returnId], references: [id])
+  
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  
+  @@index([orderId])
+  @@index([status])
+}
+
+model OrderTimeline {
+  id          String              @id @default(cuid())
+  orderId     String
+  order       Order               @relation(fields: [orderId], references: [id])
+  event       OrderTimelineEvent
+  title       String
+  description String?
+  metadata    Json?               // Additional event data
+  
+  // Actor information
+  actorType   OrderActorType      @default(SYSTEM)
+  actorId     String?             // User ID if human actor
+  actorName   String?             // Display name
+  
+  createdAt   DateTime            @default(now())
+  
+  @@index([orderId])
+  @@index([createdAt])
+}
+
+enum OrderReturnStatus {
+  REQUESTED
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+  SHIPPED_BACK
+  RECEIVED
+  PROCESSED
+  COMPLETED
+}
+
+enum OrderRefundType {
+  FULL
+  PARTIAL
+  SHIPPING_ONLY
+  TAX_ONLY
+}
+
+enum OrderRefundStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  CANCELLED
+}
+
+enum OrderTimelineEvent {
+  ORDER_CREATED
+  ORDER_CONFIRMED
+  PAYMENT_RECEIVED
+  ORDER_PROCESSING
+  ORDER_SHIPPED
+  ORDER_OUT_FOR_DELIVERY
+  ORDER_DELIVERED
+  ORDER_CANCELLED
+  RETURN_REQUESTED
+  RETURN_APPROVED
+  RETURN_REJECTED
+  RETURN_RECEIVED
+  REFUND_INITIATED
+  REFUND_COMPLETED
+  NOTE_ADDED
+  STATUS_CHANGED
+}
+
+enum OrderActorType {
+  CUSTOMER
+  ADMIN
+  SYSTEM
+  PAYMENT_GATEWAY
+  SHIPPING_PROVIDER
+}
+
+model Company {
+  id              String          @id @default(cuid())
+  name            String
+  slug            String          @unique
+  description     String?
+  
+  // Company details
+  industry        String?
+  website         String?
+  phone           String?
+  email           String?
+  
+  // Address information
+  address         String?
+  city            String?
+  state           String?
+  postalCode      String?
+  country         String?
+  
+  // Business information
+  taxId           String?         // Tax identification number
+  registrationNumber String?      // Business registration number
+  
+  // Company settings
+  isActive        Boolean         @default(true)
+  isVerified      Boolean         @default(false)
+  accountType     CompanyAccountType @default(STANDARD)
+  
+  // Billing and limits
+  creditLimit     Float?          // Credit limit for the company
+  paymentTerms    Int?            // Payment terms in days
+  
+  // Owner and users
+  ownerId         String
+  owner           User            @relation("CompanyOwner", fields: [ownerId], references: [id])
+  users           User[]
+  
+  // Company settings and permissions
+  settings        CompanySettings?
+  invitations     UserInvitation[]
+  
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  
+  @@index([slug])
+  @@index([ownerId])
+  @@index([isActive])
+}
+
+model CompanySettings {
+  id                    String    @id @default(cuid())
+  companyId             String    @unique
+  company               Company   @relation(fields: [companyId], references: [id])
+  
+  // Ordering permissions
+  requireApprovalForOrders Boolean @default(false)
+  orderApprovalLimit       Float?  // Orders above this amount need approval
+  
+  // User management
+  allowUserInvitations     Boolean @default(true)
+  maxUsers                 Int?    // Maximum number of users allowed
+  
+  // Catalog access
+  restrictedCategories     String[] // Category IDs that are restricted
+  allowedCategories        String[] // Category IDs that are allowed (if restrictive mode)
+  catalogMode              CatalogAccessMode @default(FULL_ACCESS)
+  
+  // Pricing and discounts
+  customPricingEnabled     Boolean @default(false)
+  volumeDiscountEnabled    Boolean @default(false)
+  
+  // Notifications
+  notifyOnNewOrders        Boolean @default(true)
+  notifyOnLargeOrders      Boolean @default(true)
+  largeOrderThreshold      Float?
+  
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @updatedAt
+}
+
+model UserInvitation {
+  id              String              @id @default(cuid())
+  email           String
+  companyId       String
+  company         Company             @relation(fields: [companyId], references: [id])
+  
+  // Invitation details
+  role            CompanyRole
+  invitedBy       String
+  inviter         User                @relation("InvitationSender", fields: [invitedBy], references: [id])
+  
+  // Invitation status
+  status          InvitationStatus    @default(PENDING)
+  token           String              @unique @default(cuid())
+  expiresAt       DateTime
+  
+  // Acceptance
+  acceptedBy      String?
+  acceptedUser    User?               @relation("InvitationReceiver", fields: [acceptedBy], references: [id])
+  acceptedAt      DateTime?
+  
+  // Optional message
+  message         String?
+  
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+  
+  @@unique([email, companyId])
+  @@index([token])
+  @@index([status])
+  @@index([expiresAt])
+}
+
+enum UserAccountType {
+  INDIVIDUAL
+  BUSINESS
+}
+
+enum CompanyAccountType {
+  STANDARD
+  PREMIUM
+  ENTERPRISE
+}
+
+enum CompanyRole {
+  OWNER           // Full access, can manage company and all users
+  ADMIN           // Can manage users and company settings, place orders
+  MANAGER         // Can place orders, view reports, manage team members
+  PURCHASER       // Can place orders within limits
+  VIEWER          // Can view products and orders, cannot place orders
+}
+
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  EXPIRED
+  CANCELLED
+}
+
+enum CatalogAccessMode {
+  FULL_ACCESS     // Access to all products
+  RESTRICTED      // Access only to allowed categories
+  BLACKLIST       // Access to all except restricted categories
+}
+
 enum Role {
   USER
   ADMIN
@@ -181,10 +579,18 @@ enum Role {
 
 enum OrderStatus {
   PENDING
+  CONFIRMED
   PROCESSING
   SHIPPED
+  OUT_FOR_DELIVERY
   DELIVERED
   CANCELLED
+  REFUNDED
+  PARTIALLY_REFUNDED
+  RETURN_REQUESTED
+  RETURN_APPROVED
+  RETURN_REJECTED
+  RETURNED
 }
 
 enum PromotionType {
