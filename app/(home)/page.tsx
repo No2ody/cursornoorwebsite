@@ -54,7 +54,7 @@ export default function HomePage() {
   return (
     <div className="min-h-screen">
       {/* Enhanced Hero Banner Section */}
-      <section className="hero-gradient text-white overflow-hidden relative pt-32 pb-20">
+      <section className="hero-gradient text-white overflow-hidden relative pb-20">
         {/* Background Pattern */}
         <div className='absolute inset-0 opacity-10'>
           <div className='absolute inset-0' style={{

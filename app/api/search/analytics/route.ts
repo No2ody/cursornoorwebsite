@@ -16,7 +16,7 @@ import prisma from '@/lib/prisma'
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { query, resultsCount, clickedResult, sessionId } = body
+    const { query, clickedResult } = body
     
     if (!query) {
       return NextResponse.json(

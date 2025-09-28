@@ -60,35 +60,59 @@ export default function CartPage() {
 
   if (cart.items.length === 0) {
     return (
-      <div className='container mx-auto px-4 pt-32 pb-16'>
-        <Card>
-          <CardHeader>
-            <CardTitle>Your cart is empty</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className='text-muted-foreground'>
-              Add some products to your cart to see them here.
-            </p>
-          </CardContent>
-          <CardFooter>
-            <Button asChild>
-              <Link href='/products'>Continue Shopping</Link>
-            </Button>
-          </CardFooter>
-        </Card>
+      <div className='min-h-screen bg-gradient-to-br from-gray-50 via-white to-brand-50'>
+        <div className='container mx-auto px-4 pb-16 flex items-center justify-center min-h-[60vh]'>
+          <Card className='max-w-md w-full shadow-card border-0 text-center'>
+            <CardHeader className='pb-4'>
+              <div className='mx-auto w-16 h-16 bg-brand-100 rounded-full flex items-center justify-center mb-4'>
+                <svg className="w-8 h-8 text-brand" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 11-4 0v-6m4 0V9a2 2 0 10-4 0v4.01" />
+                </svg>
+              </div>
+              <CardTitle className='text-2xl text-brand'>Your cart is empty</CardTitle>
+            </CardHeader>
+            <CardContent className='pb-6'>
+              <p className='text-gray-600 mb-6'>
+                Discover our premium lighting and bathroom fixtures to get started.
+              </p>
+            </CardContent>
+            <CardFooter className='pt-0'>
+              <Button asChild className='w-full btn-brand'>
+                <Link href='/products'>
+                  <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                  </svg>
+                  Continue Shopping
+                </Link>
+              </Button>
+            </CardFooter>
+          </Card>
+        </div>
       </div>
     )
   }
 
   return (
-    <div className='container mx-auto px-4 pt-32 pb-8 max-w-6xl'>
-      <div className='grid grid-cols-1 lg:grid-cols-3 gap-8'>
-        {/* Cart Items */}
-        <div className='lg:col-span-2'>
-          <Card>
-            <CardHeader>
-              <CardTitle className='text-2xl'>Shopping Cart ({cart.items.length} items)</CardTitle>
-            </CardHeader>
+    <div className='min-h-screen bg-gradient-to-br from-gray-50 via-white to-brand-50'>
+      <div className='container mx-auto px-4 pb-8 max-w-6xl'>
+        {/* Page Header */}
+        <div className='text-center mb-8'>
+          <h1 className='text-4xl font-bold text-brand mb-2'>Shopping Cart</h1>
+          <p className='text-gray-600'>Review your items before checkout</p>
+        </div>
+
+        <div className='grid grid-cols-1 lg:grid-cols-3 gap-8'>
+          {/* Cart Items */}
+          <div className='lg:col-span-2'>
+            <Card className='shadow-card border-0'>
+              <CardHeader className='bg-gradient-to-r from-brand to-brand-600 text-white rounded-t-lg'>
+                <CardTitle className='text-xl flex items-center gap-2'>
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 11-4 0v-6m4 0V9a2 2 0 10-4 0v4.01" />
+                  </svg>
+                  Your Items ({cart.items.length})
+                </CardTitle>
+              </CardHeader>
             <CardContent className='space-y-4'>
               {cart.items.map((item) => (
                 <div
@@ -157,15 +181,27 @@ export default function CartPage() {
         {/* Advanced Promotions & Order Summary */}
         <div className='space-y-6'>
           {/* Advanced Discount Code with Promotions */}
-          <AdvancedDiscountCode
-            items={cartItems}
-            onPromotionsCalculated={setCalculationResult}
-            appliedCoupons={appliedCoupons}
-            onCouponsChange={setAppliedCoupons}
-          />
+          <Card className='shadow-card border-0'>
+            <CardHeader className='bg-gradient-to-r from-gold to-yellow-500 text-white rounded-t-lg'>
+              <CardTitle className='text-xl flex items-center gap-2'>
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                </svg>
+                Promotions & Discounts
+              </CardTitle>
+            </CardHeader>
+            <CardContent className='p-6'>
+              <AdvancedDiscountCode
+                items={cartItems}
+                onPromotionsCalculated={setCalculationResult}
+                appliedCoupons={appliedCoupons}
+                onCouponsChange={setAppliedCoupons}
+              />
+            </CardContent>
+          </Card>
 
           {/* Checkout Actions */}
-          <Card className="card-enhanced">
+          <Card className="shadow-card border-0 sticky top-8">
             <CardHeader>
               <CardTitle className="text-xl">Ready to Checkout?</CardTitle>
             </CardHeader>

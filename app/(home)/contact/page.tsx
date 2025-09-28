@@ -46,7 +46,7 @@ export default function ContactPage() {
 
 
   return (
-    <div className="min-h-screen pt-32 pb-20">
+    <div className="min-h-screen pb-20">
       {/* Hero Section */}
       <section className="py-20 bg-gradient-to-r from-blue-900 via-blue-800 to-purple-900 text-white relative overflow-hidden">
         <div className="container mx-auto px-4 text-center relative z-10">

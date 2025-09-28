@@ -30,7 +30,7 @@ export function AdminHeader() {
   const pathname = usePathname()
 
   return (
-    <header className='border-b bg-white'>
+    <header className='fixed top-0 left-0 right-0 z-40 border-b bg-white/95 backdrop-blur-md shadow-lg'>
       <div className='container mx-auto px-4 sm:px-6 lg:px-8'>
         <div className='flex h-16 items-center justify-between'>
           {/* Logo and Navigation */}
@@ -47,7 +47,10 @@ export function AdminHeader() {
                   height={32}
                   className='object-contain rounded-lg'
                 />
-                <span>Noor AlTayseer</span>
+                <div>
+                  <span className='text-brand'>Noor AlTayseer</span>
+                  <span className='block text-xs text-gold font-medium'>Admin Dashboard</span>
+                </div>
               </Link>
 
             </div>
@@ -61,10 +64,10 @@ export function AdminHeader() {
                     key={item.name}
                     href={item.href}
                     className={cn(
-                      'flex items-center gap-2 text-sm font-medium transition-colors',
+                      'flex items-center gap-2 text-sm font-medium transition-colors px-3 py-2 rounded-lg',
                       isActive
-                        ? 'text-black'
-                        : 'text-gray-600 hover:text-gray-900'
+                        ? 'text-brand bg-brand-50 border border-brand-200'
+                        : 'text-gray-600 hover:text-brand hover:bg-brand-50'
                     )}
                   >
                     <item.icon className='h-4 w-4' />

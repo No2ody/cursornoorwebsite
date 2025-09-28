@@ -76,7 +76,7 @@ export async function POST(
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
 
-    const { id: orderId } = await params
+    // const { id: orderId } = await params
     const body = await request.json()
     const { returnId, approved, reviewNotes } = processReturnSchema.parse(body)
 

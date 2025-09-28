@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -59,76 +59,54 @@ export function AdvancedDiscountCode({
   const [calculationResult, setCalculationResult] = useState<CartCalculationResult | null>(null)
   const { toast } = useToast()
 
-  // Calculate promotions when items or coupons change
+  // Use refs to store latest callback values without causing re-renders
+  const onPromotionsCalculatedRef = useRef(onPromotionsCalculated)
+  const itemsRef = useRef(items)
+  const appliedCouponsRef = useRef(appliedCoupons)
+
+  // Update refs when props change
   useEffect(() => {
-    const calculateTotals = async () => {
-      if (items.length === 0) {
-        // Reset calculation result when cart is empty
-        const emptyResult: CartCalculationResult = {
-          subtotal: 0,
-          appliedPromotions: [],
-          totalDiscount: 0,
-          shippingCost: 0,
-          taxAmount: 0,
-          total: 0
-        }
-        setCalculationResult(emptyResult)
-        onPromotionsCalculated(emptyResult)
-        return
-      }
+    onPromotionsCalculatedRef.current = onPromotionsCalculated
+  }, [onPromotionsCalculated])
 
-      if (appliedCoupons.length > 0) {
-        // Only calculate when there are applied coupons
-        await calculatePromotions()
-      } else {
-        // Calculate basic totals without promotions
-        const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0)
-        const shippingCost = subtotal >= 200 ? 0 : 10 // Free shipping over AED 200
-        const taxAmount = subtotal * 0.1
-        const total = subtotal + shippingCost + taxAmount
-        
-        const basicResult: CartCalculationResult = {
-          subtotal,
-          appliedPromotions: [],
-          totalDiscount: 0,
-          shippingCost,
-          taxAmount,
-          total
-        }
-        setCalculationResult(basicResult)
-        onPromotionsCalculated(basicResult)
-      }
-    }
+  useEffect(() => {
+    itemsRef.current = items
+  }, [items])
 
-    calculateTotals()
-  }, [items, appliedCoupons, onPromotionsCalculated, calculatePromotions])
+  useEffect(() => {
+    appliedCouponsRef.current = appliedCoupons
+  }, [appliedCoupons])
 
+  // Define calculatePromotions with stable dependencies
   const calculatePromotions = useCallback(async () => {
     if (isCalculating) return // Prevent multiple simultaneous calculations
     
     setIsCalculating(true)
     try {
+      const currentItems = itemsRef.current
+      const currentCoupons = appliedCouponsRef.current
+      
       const response = await fetch('/api/promotions/calculate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          items,
-          appliedCoupons
+          items: currentItems,
+          appliedCoupons: currentCoupons
         }),
       })
 
       if (response.ok) {
         const result: CartCalculationResult = await response.json()
         setCalculationResult(result)
-        onPromotionsCalculated(result)
+        onPromotionsCalculatedRef.current(result)
       } else {
         const errorData = await response.json().catch(() => ({}))
         console.error('Failed to calculate promotions:', errorData)
         
         // Fallback to basic calculation
-        const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0)
+        const subtotal = currentItems.reduce((sum, item) => sum + (item.price * item.quantity), 0)
         const shippingCost = subtotal >= 200 ? 0 : 10
         const taxAmount = subtotal * 0.1
         const total = subtotal + shippingCost + taxAmount
@@ -142,13 +120,14 @@ export function AdvancedDiscountCode({
           total
         }
         setCalculationResult(fallbackResult)
-        onPromotionsCalculated(fallbackResult)
+        onPromotionsCalculatedRef.current(fallbackResult)
       }
     } catch (calculationError) {
       console.error('Error calculating promotions:', calculationError)
       
       // Fallback to basic calculation on error
-      const subtotal = items.reduce((sum, item) => sum + (item.price * item.quantity), 0)
+      const currentItems = itemsRef.current
+      const subtotal = currentItems.reduce((sum, item) => sum + (item.price * item.quantity), 0)
       const shippingCost = subtotal >= 200 ? 0 : 10
       const taxAmount = subtotal * 0.1
       const total = subtotal + shippingCost + taxAmount
@@ -162,11 +141,58 @@ export function AdvancedDiscountCode({
         total
       }
       setCalculationResult(fallbackResult)
-      onPromotionsCalculated(fallbackResult)
+      onPromotionsCalculatedRef.current(fallbackResult)
     } finally {
       setIsCalculating(false)
     }
-  }, [items, appliedCoupons, isCalculating, onPromotionsCalculated])
+  }, [isCalculating])
+
+  // Calculate promotions when items or coupons change - with stable dependencies
+  useEffect(() => {
+    const calculateTotals = () => {
+      const currentItems = itemsRef.current
+      const currentCoupons = appliedCouponsRef.current
+      
+      if (currentItems.length === 0) {
+        // Reset calculation result when cart is empty
+        const emptyResult: CartCalculationResult = {
+          subtotal: 0,
+          appliedPromotions: [],
+          totalDiscount: 0,
+          shippingCost: 0,
+          taxAmount: 0,
+          total: 0
+        }
+        setCalculationResult(emptyResult)
+        onPromotionsCalculatedRef.current(emptyResult)
+        return
+      }
+
+      if (currentCoupons.length > 0) {
+        // Only calculate when there are applied coupons
+        calculatePromotions()
+      } else {
+        // Calculate basic totals without promotions
+        const subtotal = currentItems.reduce((sum, item) => sum + (item.price * item.quantity), 0)
+        const shippingCost = subtotal >= 200 ? 0 : 10 // Free shipping over AED 200
+        const taxAmount = subtotal * 0.1
+        const total = subtotal + shippingCost + taxAmount
+        
+        const basicResult: CartCalculationResult = {
+          subtotal,
+          appliedPromotions: [],
+          totalDiscount: 0,
+          shippingCost,
+          taxAmount,
+          total
+        }
+        setCalculationResult(basicResult)
+        onPromotionsCalculatedRef.current(basicResult)
+      }
+    }
+
+    calculateTotals()
+  }, [items, appliedCoupons, calculatePromotions])
 
   const validateAndApplyCoupon = useCallback(async () => {
     const trimmedCode = code.trim().toUpperCase()
@@ -180,7 +206,8 @@ export function AdvancedDiscountCode({
       return
     }
 
-    if (appliedCoupons.includes(trimmedCode)) {
+    const currentCoupons = appliedCouponsRef.current
+    if (currentCoupons.includes(trimmedCode)) {
       toast({
         title: 'Already Applied',
         description: 'This coupon code is already applied.',
@@ -221,7 +248,8 @@ export function AdvancedDiscountCode({
       }
 
       // Add the coupon and recalculate
-      const newCoupons = [...appliedCoupons, trimmedCode]
+      const currentCoupons = appliedCouponsRef.current
+      const newCoupons = [...currentCoupons, trimmedCode]
       onCouponsChange(newCoupons)
       setCode('')
 
@@ -240,17 +268,18 @@ export function AdvancedDiscountCode({
     } finally {
       setIsLoading(false)
     }
-  }, [code, appliedCoupons, isLoading, onCouponsChange, toast])
+  }, [code, isLoading, onCouponsChange, toast])
 
   const removeCoupon = useCallback((couponCode: string) => {
-    const newCoupons = appliedCoupons.filter(c => c !== couponCode)
+    const currentCoupons = appliedCouponsRef.current
+    const newCoupons = currentCoupons.filter(c => c !== couponCode)
     onCouponsChange(newCoupons)
     
     toast({
       title: 'Coupon Removed',
       description: `Removed coupon: ${couponCode}`,
     })
-  }, [appliedCoupons, onCouponsChange, toast])
+  }, [onCouponsChange, toast])
 
   // Memoized handlers for better performance
   const handleCodeChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {

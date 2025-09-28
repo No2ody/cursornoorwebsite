@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
 import { Badge } from '@/components/ui/badge'
@@ -34,8 +33,6 @@ import {
   ChevronDown, 
   Folder,
   FolderOpen,
-  Eye,
-  EyeOff,
   Menu,
   Star
 } from 'lucide-react'
@@ -64,7 +61,6 @@ interface CategoriesTreeProps {
 }
 
 export function CategoriesTree({ categories, onRefresh }: CategoriesTreeProps) {
-  const router = useRouter()
   const [deletingId, setDeletingId] = useState<string | null>(null)
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set())
 
@@ -255,7 +251,7 @@ export function CategoriesTree({ categories, onRefresh }: CategoriesTreeProps) {
                   <AlertDialogHeader>
                     <AlertDialogTitle>Delete Category</AlertDialogTitle>
                     <AlertDialogDescription>
-                      Are you sure you want to delete "{category.name}"? This action cannot be undone.
+                      Are you sure you want to delete &ldquo;{category.name}&rdquo;? This action cannot be undone.
                       {(category._count.products > 0 || category._count.children > 0) && (
                         <div className="mt-2 p-2 bg-yellow-50 rounded text-yellow-800 text-sm">
                           {category._count.products > 0 && (

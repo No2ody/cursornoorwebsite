@@ -55,7 +55,8 @@ export default async function OrderConfirmationPage(props: OrderConfirmationPage
   const shippingAddress = order.shippingAddress
 
   return (
-    <div className="container mx-auto px-4 py-8 pt-32 max-w-4xl">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-brand-50">
+      <div className="container mx-auto px-4 py-8 max-w-4xl">
       {/* Success Header */}
       <div className="text-center mb-8">
         <div className="flex justify-center mb-4">
@@ -253,6 +254,7 @@ export default async function OrderConfirmationPage(props: OrderConfirmationPage
           </Card>
         </div>
       </div>
+    </div>
     </div>
   )
 }

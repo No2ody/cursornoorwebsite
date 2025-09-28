@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -8,7 +8,7 @@ import { CategoriesTree } from '@/components/admin/categories/categories-tree'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Switch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/label'
-import { Plus, Folder, Eye, EyeOff } from 'lucide-react'
+import { Plus, Folder, Eye } from 'lucide-react'
 
 interface Category {
   id: string
@@ -37,7 +37,7 @@ export default function CategoriesPage() {
   const [loading, setLoading] = useState(true)
   const [showInactive, setShowInactive] = useState(false)
 
-  const fetchCategories = async () => {
+  const fetchCategories = useCallback(async () => {
     setLoading(true)
     try {
       const params = new URLSearchParams({
@@ -56,11 +56,11 @@ export default function CategoriesPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [showInactive])
 
   useEffect(() => {
     fetchCategories()
-  }, [showInactive])
+  }, [showInactive, fetchCategories])
 
   const handleRefresh = () => {
     fetchCategories()

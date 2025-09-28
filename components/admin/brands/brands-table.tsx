@@ -1,7 +1,6 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
 import Image from 'next/image'
 import Link from 'next/link'
 import { Badge } from '@/components/ui/badge'
@@ -48,7 +47,6 @@ interface BrandsTableProps {
 }
 
 export function BrandsTable({ brands, onRefresh }: BrandsTableProps) {
-  const router = useRouter()
   const [deletingId, setDeletingId] = useState<string | null>(null)
 
   const handleDelete = async (brandId: string) => {
@@ -208,7 +206,7 @@ export function BrandsTable({ brands, onRefresh }: BrandsTableProps) {
                       <AlertDialogHeader>
                         <AlertDialogTitle>Delete Brand</AlertDialogTitle>
                         <AlertDialogDescription>
-                          Are you sure you want to delete "{brand.name}"? This action cannot be undone.
+                          Are you sure you want to delete &ldquo;{brand.name}&rdquo;? This action cannot be undone.
                           {brand._count.products > 0 && (
                             <div className="mt-2 p-2 bg-yellow-50 rounded text-yellow-800 text-sm">
                               This brand has {brand._count.products} associated products and cannot be deleted.
