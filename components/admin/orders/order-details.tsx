@@ -20,18 +20,18 @@ import { Label } from '@/components/ui/label'
 import { toast } from '@/hooks/use-toast'
 import {
   Package,
-  Truck,
+  // Truck,
   MapPin,
-  Clock,
+  // Clock,
   User,
   CreditCard,
   RefreshCw,
   Ban,
-  Undo2,
-  DollarSign,
-  Calendar,
-  FileText,
-  AlertCircle,
+  // Undo2,
+  // DollarSign,
+  // Calendar,
+  // FileText,
+  // AlertCircle,
 } from 'lucide-react'
 import { formatCurrency } from '@/lib/utils'
 

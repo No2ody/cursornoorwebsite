@@ -13,7 +13,9 @@ interface OrderStatsProps {
 }
 
 export function OrderStats({ data }: OrderStatsProps) {
-  const total = data.reduce((sum, item) => sum + item.value, 0)
+  // Ensure data is an array and has the correct structure
+  const safeData = Array.isArray(data) ? data : []
+  const total = safeData.reduce((sum, item) => sum + (item?.value || 0), 0)
 
   return (
     <Card className='col-span-full lg:col-span-3'>
@@ -21,11 +23,16 @@ export function OrderStats({ data }: OrderStatsProps) {
         <CardTitle>Order Distribution</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className='h-[400px]'>
-          <ResponsiveContainer width='100%' height='100%'>
-            <PieChart>
+        {safeData.length === 0 ? (
+          <div className='h-[400px] flex items-center justify-center text-muted-foreground'>
+            No order data available
+          </div>
+        ) : (
+          <div className='h-[400px]'>
+            <ResponsiveContainer width='100%' height='100%'>
+              <PieChart>
               <Pie
-                data={data}
+                data={safeData}
                 cx='50%'
                 cy='50%'
                 labelLine={false}
@@ -63,8 +70,8 @@ export function OrderStats({ data }: OrderStatsProps) {
                               Orders
                             </span>
                             <span className='font-bold'>
-                              {data.value} (
-                              {((data.value / total) * 100).toFixed(1)}%)
+                              {payload[0]?.value || 0} (
+                              {total > 0 ? (((Number(payload[0]?.value) || 0) / total) * 100).toFixed(1) : 0}%)
                             </span>
                           </div>
                         </div>
@@ -77,6 +84,7 @@ export function OrderStats({ data }: OrderStatsProps) {
             </PieChart>
           </ResponsiveContainer>
         </div>
+        )}
       </CardContent>
     </Card>
   )

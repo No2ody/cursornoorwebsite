@@ -55,7 +55,7 @@ export default async function OrderConfirmationPage(props: OrderConfirmationPage
   const shippingAddress = order.shippingAddress
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-brand-50">
+    <div className="bg-gradient-to-br from-gray-50 via-white to-brand-50 min-h-[calc(100vh-8rem)]">
       <div className="container mx-auto px-4 py-8 max-w-4xl">
       {/* Success Header */}
       <div className="text-center mb-8">

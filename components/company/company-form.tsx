@@ -50,7 +50,24 @@ const companyFormSchema = z.object({
 type CompanyFormValues = z.infer<typeof companyFormSchema>
 
 interface CompanyFormProps {
-  company?: any
+  company?: {
+    id?: string
+    name?: string
+    slug?: string
+    email?: string
+    phone?: string
+    website?: string
+    address?: string
+    city?: string
+    state?: string
+    postalCode?: string
+    country?: string
+    accountType?: 'STANDARD' | 'PREMIUM' | 'ENTERPRISE'
+    taxId?: string
+    registrationNumber?: string
+    industry?: string
+    description?: string
+  }
   onSuccess?: () => void
 }
 
@@ -100,7 +117,7 @@ export function CompanyForm({ company, onSuccess }: CompanyFormProps) {
 
       // Clean up empty values
       const cleanValues = Object.fromEntries(
-        Object.entries(values).filter(([_, value]) => value !== '')
+        Object.entries(values).filter(([, value]) => value !== '')
       )
 
       const response = await fetch(url, {

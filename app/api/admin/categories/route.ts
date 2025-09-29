@@ -37,7 +37,7 @@ export async function GET(request: NextRequest) {
     const parentId = searchParams.get('parentId')
     const flat = searchParams.get('flat') === 'true'
 
-    const whereClause: any = {}
+    const whereClause: Record<string, unknown> = {}
     
     if (!includeInactive) {
       whereClause.isActive = true

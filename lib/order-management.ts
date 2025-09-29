@@ -140,7 +140,7 @@ export async function cancelOrder({
     OrderStatus.PROCESSING,
   ]
 
-  if (!cancellableStatuses.includes(order.status)) {
+  if (!cancellableStatuses.includes(order.status as any)) {
     throw new Error(`Cannot cancel order with status: ${order.status}`)
   }
 
@@ -233,7 +233,7 @@ export async function createReturnRequest({
 
   // Check if order is eligible for returns
   const returnableStatuses = [OrderStatus.DELIVERED]
-  if (!returnableStatuses.includes(order.status)) {
+  if (!returnableStatuses.includes(order.status as any)) {
     throw new Error(`Cannot create return for order with status: ${order.status}`)
   }
 
@@ -472,24 +472,9 @@ export async function getOrderDetails(orderId: string) {
   })
 }
 
-// Populate order numbers for existing orders
+// Populate order numbers for existing orders (if needed)
 export async function populateOrderNumbers() {
-  const ordersWithoutNumbers = await prisma.order.findMany({
-    where: {
-      orderNumber: null,
-    },
-    select: {
-      id: true,
-    },
-  })
-
-  for (const order of ordersWithoutNumbers) {
-    const orderNumber = generateOrderNumber()
-    await prisma.order.update({
-      where: { id: order.id },
-      data: { orderNumber },
-    })
-  }
-
-  return ordersWithoutNumbers.length
+  // Since orderNumber has a default value, this function is not needed
+  // but kept for backward compatibility
+  return 0
 }

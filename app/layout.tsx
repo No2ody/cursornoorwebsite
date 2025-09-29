@@ -5,6 +5,7 @@ import './globals.css'
 import { auth } from '@/auth'
 import { SessionProvider } from '@/components/providers/session-provider'
 import { CartProvider } from '@/components/providers/cart-provider'
+import { AnalyticsProvider, GoogleAnalyticsScript, GoogleTagManagerScript, GoogleTagManagerNoScript } from '@/components/analytics/analytics-provider'
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -34,13 +35,20 @@ export default async function RootLayout({
 
   return (
     <html lang='en'>
+      <head>
+        <GoogleAnalyticsScript />
+        <GoogleTagManagerScript />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        <GoogleTagManagerNoScript />
         <SessionProvider session={session}>
           <CartProvider>
-            {children}
-            <Toaster />
+            <AnalyticsProvider>
+              {children}
+              <Toaster />
+            </AnalyticsProvider>
           </CartProvider>
         </SessionProvider>
       </body>

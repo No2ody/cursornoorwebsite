@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import prisma from '@/lib/prisma'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { ProfileForm } from '@/components/dashboard/profile-form'
+import { ChangePasswordForm } from '@/components/dashboard/change-password-form'
 
 export default async function ProfilePage() {
   const session = await auth()
@@ -25,7 +26,7 @@ export default async function ProfilePage() {
           Manage your account settings and preferences
         </p>
       </div>
-      <div className='grid gap-4'>
+      <div className='grid gap-8'>
         <Card>
           <CardHeader>
             <CardTitle>Personal Information</CardTitle>
@@ -34,6 +35,11 @@ export default async function ProfilePage() {
             <ProfileForm user={user} />
           </CardContent>
         </Card>
+        
+        {/* Change Password Section - Only show for users with password authentication */}
+        {user?.password && (
+          <ChangePasswordForm />
+        )}
       </div>
     </div>
   )

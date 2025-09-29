@@ -1,13 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
-import bcrypt from 'bcryptjs'
 import prisma from '@/lib/prisma'
 import { z } from 'zod'
 import { Role } from '@prisma/client'
+import { 
+  passwordSchema, 
+  hashPassword, 
+  storePasswordHistory,
+  securityHeaders
+} from '@/lib/password-security'
 
 const registerSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
   email: z.string().email('Invalid email address'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
+  password: passwordSchema,
 })
 
 export async function POST(request: NextRequest) {
@@ -30,30 +35,44 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Hash password
-    const hashedPassword = await bcrypt.hash(password, 12)
+    // Hash password with secure settings
+    const hashedPassword = await hashPassword(password)
 
-    // Create user
-    const user = await prisma.user.create({
-      data: {
-        name,
-        email,
-        password: hashedPassword,
-        role: Role.USER, // Default role
-      },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        role: true,
-        createdAt: true,
-      }
+    // Create user in a transaction to ensure password history is stored
+    const user = await prisma.$transaction(async (tx) => {
+      const newUser = await tx.user.create({
+        data: {
+          name,
+          email,
+          password: hashedPassword,
+          role: Role.USER, // Default role
+        },
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          role: true,
+          createdAt: true,
+        }
+      })
+
+      // Store initial password in history
+      await storePasswordHistory(newUser.id, hashedPassword, tx)
+
+      return newUser
     })
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       message: 'User created successfully',
       user
     }, { status: 201 })
+
+    // Add security headers
+    Object.entries(securityHeaders).forEach(([key, value]) => {
+      response.headers.set(key, value)
+    })
+
+    return response
 
   } catch (error) {
     console.error('Registration error:', error)

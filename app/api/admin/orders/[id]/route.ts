@@ -97,10 +97,10 @@ export async function PUT(
         const { addOrderTimelineEvent } = await import('@/lib/order-management')
         await addOrderTimelineEvent({
           orderId,
-          event: 'NOTE_ADDED' as any,
+          event: 'NOTE_ADDED' as const,
           title: 'Order updated',
           description: validatedData.notes || 'Order information updated',
-          actorType: 'ADMIN' as any,
+          actorType: 'ADMIN' as const,
           actorId: session.user.id,
           actorName: session.user.name || session.user.email || 'Admin',
           metadata: {

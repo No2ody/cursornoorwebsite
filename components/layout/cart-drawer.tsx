@@ -184,17 +184,9 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
                     className="w-full bg-brand hover:bg-brand-700 text-white h-12"
                     onClick={onClose}
                   >
-                    <Link href="/checkout">Proceed to Checkout</Link>
+                    <Link href="/cart">View Cart & Checkout</Link>
                   </Button>
-                  
-                  <Button
-                    asChild
-                    variant="outline"
-                    className="w-full border-brand text-brand hover:bg-brand-50 h-12"
-                    onClick={onClose}
-                  >
-                    <Link href="/cart">View Full Cart</Link>
-                  </Button>
+
                 </div>
               </div>
             )}

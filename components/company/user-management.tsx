@@ -56,7 +56,7 @@ import {
   Mail, 
   Shield, 
   Trash2, 
-  Calendar,
+  // Calendar,
   Clock,
   Crown,
   User,
@@ -109,18 +109,23 @@ export function UserManagement({ companyId, currentUserRole, onRefresh }: UserMa
   const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(true)
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false)
-  const [inviteForm, setInviteForm] = useState({
+  const [inviteForm, setInviteForm] = useState<{
+    email: string
+    role: CompanyRole
+    message: string
+  }>({
     email: '',
     role: CompanyRole.VIEWER,
     message: '',
   })
   const [inviteLoading, setInviteLoading] = useState(false)
 
-  const canManageUsers = [CompanyRole.OWNER, CompanyRole.ADMIN, CompanyRole.MANAGER].includes(currentUserRole)
-  const canInviteUsers = [CompanyRole.OWNER, CompanyRole.ADMIN, CompanyRole.MANAGER].includes(currentUserRole)
+  const canManageUsers = [CompanyRole.OWNER, CompanyRole.ADMIN, CompanyRole.MANAGER].includes(currentUserRole as any)
+  const canInviteUsers = [CompanyRole.OWNER, CompanyRole.ADMIN, CompanyRole.MANAGER].includes(currentUserRole as any)
 
   useEffect(() => {
     fetchUsers()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [companyId])
 
   const fetchUsers = async () => {
@@ -315,7 +320,7 @@ export function UserManagement({ companyId, currentUserRole, onRefresh }: UserMa
                     <Label htmlFor="role">Role *</Label>
                     <Select 
                       value={inviteForm.role} 
-                      onValueChange={(value) => setInviteForm({ ...inviteForm, role: value as CompanyRole })}
+                      onValueChange={(value: string) => setInviteForm({ ...inviteForm, role: value as CompanyRole })}
                     >
                       <SelectTrigger>
                         <SelectValue />
@@ -429,7 +434,7 @@ export function UserManagement({ companyId, currentUserRole, onRefresh }: UserMa
                             Send Email
                           </DropdownMenuItem>
                           
-                          {user.companyRole && user.companyRole !== CompanyRole.OWNER && (
+                          {user.companyRole && (user.companyRole as any) !== CompanyRole.OWNER && (
                             <>
                               <DropdownMenuSeparator />
                               <DropdownMenuLabel>Change Role</DropdownMenuLabel>

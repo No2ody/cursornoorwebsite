@@ -36,16 +36,27 @@ interface RecentOrdersProps {
   orders: Order[]
 }
 
-const statusColors = {
+const statusColors: Record<OrderStatus, string> = {
   [OrderStatus.PENDING]: 'bg-yellow-100 text-yellow-800',
+  [OrderStatus.CONFIRMED]: 'bg-blue-100 text-blue-800',
   [OrderStatus.PROCESSING]: 'bg-blue-100 text-blue-800',
   [OrderStatus.SHIPPED]: 'bg-purple-100 text-purple-800',
+  [OrderStatus.OUT_FOR_DELIVERY]: 'bg-purple-100 text-purple-800',
   [OrderStatus.DELIVERED]: 'bg-green-100 text-green-800',
   [OrderStatus.CANCELLED]: 'bg-red-100 text-red-800',
+  [OrderStatus.REFUNDED]: 'bg-gray-100 text-gray-800',
+  [OrderStatus.PARTIALLY_REFUNDED]: 'bg-gray-100 text-gray-800',
+  [OrderStatus.RETURN_REQUESTED]: 'bg-orange-100 text-orange-800',
+  [OrderStatus.RETURN_APPROVED]: 'bg-orange-100 text-orange-800',
+  [OrderStatus.RETURN_REJECTED]: 'bg-red-100 text-red-800',
+  [OrderStatus.RETURNED]: 'bg-gray-100 text-gray-800',
 }
 
 export function RecentOrders({ orders }: RecentOrdersProps) {
   const router = useRouter()
+  
+  // Ensure orders is an array and has the correct structure
+  const safeOrders = Array.isArray(orders) ? orders : []
 
   return (
     <Card>
@@ -53,7 +64,12 @@ export function RecentOrders({ orders }: RecentOrdersProps) {
         <CardTitle>Recent Orders</CardTitle>
       </CardHeader>
       <CardContent>
-        <Table>
+        {safeOrders.length === 0 ? (
+          <div className='flex items-center justify-center py-8 text-muted-foreground'>
+            No recent orders found
+          </div>
+        ) : (
+          <Table>
           <TableHeader>
             <TableRow>
               <TableHead>Order ID</TableHead>
@@ -65,7 +81,7 @@ export function RecentOrders({ orders }: RecentOrdersProps) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {orders.map((order) => (
+            {safeOrders.map((order) => (
               <TableRow key={order.id}>
                 <TableCell className='font-medium'>{order.id}</TableCell>
                 <TableCell>{order.user.name || 'Anonymous'}</TableCell>
@@ -103,6 +119,7 @@ export function RecentOrders({ orders }: RecentOrdersProps) {
             ))}
           </TableBody>
         </Table>
+        )}
       </CardContent>
     </Card>
   )

@@ -22,16 +22,24 @@ interface RevenueChartProps {
 }
 
 export function RevenueChart({ data }: RevenueChartProps) {
+  // Ensure data is an array and has the correct structure
+  const safeData = Array.isArray(data) ? data : []
+  
   return (
     <Card className='col-span-full lg:col-span-4'>
       <CardHeader>
         <CardTitle>Revenue Overview</CardTitle>
       </CardHeader>
       <CardContent>
-        <div className='h-[400px]'>
-          <ResponsiveContainer width='100%' height='100%'>
-            <AreaChart
-              data={data}
+        {safeData.length === 0 ? (
+          <div className='h-[400px] flex items-center justify-center text-muted-foreground'>
+            No revenue data available
+          </div>
+        ) : (
+          <div className='h-[400px]'>
+            <ResponsiveContainer width='100%' height='100%'>
+              <AreaChart
+                data={safeData}
               margin={{
                 top: 10,
                 right: 30,
@@ -93,6 +101,7 @@ export function RevenueChart({ data }: RevenueChartProps) {
             </AreaChart>
           </ResponsiveContainer>
         </div>
+        )}
       </CardContent>
     </Card>
   )

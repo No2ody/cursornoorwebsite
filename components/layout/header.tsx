@@ -297,6 +297,19 @@ export function Header() {
             )}
           </Link>
           <Link
+            href='/support'
+            className={`text-base font-medium transition-colors relative px-3 py-2 rounded-lg hover:bg-brand-50 ${
+              isActiveLink('/support') 
+                ? 'text-brand hover:text-brand-700' 
+                : 'text-gray-700 hover:text-brand'
+            }`}
+          >
+            Support
+            {isActiveLink('/support') && (
+              <div className='absolute -bottom-1 left-0 right-0 h-0.5 bg-brand rounded-full' />
+            )}
+          </Link>
+          <Link
             href='/contact'
             className={`text-base font-medium transition-colors relative px-3 py-2 rounded-lg hover:bg-brand-50 ${
               isActiveLink('/contact') 

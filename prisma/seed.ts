@@ -19,6 +19,14 @@ async function main() {
     return categoryPrefix ? `${categoryPrefix} ${cleanName}` : cleanName
   }
 
+  // Create slug from name
+  function createSlug(name: string): string {
+    return name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)/g, '')
+  }
+
   // Helper to safely read a directory
   function readDirSafe(dir: string): string[] {
     try {
@@ -72,25 +80,29 @@ async function main() {
   console.log('📁 Creating categories...')
 
   // 1. BATHROOM CATEGORIES
-  const bathroomCategory = await prisma.category.create({
-    data: {
-      name: 'Bathroom',
-      description: 'Premium bathroom fixtures and accessories for modern homes',
-      image: '/images/Bathroom/Bathroom Cabinet/Cateogry_Bathroom_Cabinet.jpg'
-    }
-  })
+  // Note: These categories are commented out as they are not used in the current seeding logic
+  // const bathroomCategory = await prisma.category.create({
+  //   data: {
+  //     name: 'Bathroom',
+  //     slug: 'bathroom',
+  //     description: 'Premium bathroom fixtures and accessories for modern homes',
+  //     image: '/images/Bathroom/Bathroom Cabinet/Cateogry_Bathroom_Cabinet.jpg'
+  //   }
+  // })
 
-  const bathroomCabinetCategory = await prisma.category.create({
-    data: {
-      name: 'Bathroom Cabinet',
-      description: 'High-quality bathroom cabinets in various materials and styles',
-      image: '/images/Bathroom/Bathroom Cabinet/Cateogry_Bathroom_Cabinet.jpg'
-    }
-  })
+  // const bathroomCabinetCategory = await prisma.category.create({
+  //   data: {
+  //     name: 'Bathroom Cabinet',
+  //     slug: 'bathroom-cabinet',
+  //     description: 'High-quality bathroom cabinets in various materials and styles',
+  //     image: '/images/Bathroom/Bathroom Cabinet/Cateogry_Bathroom_Cabinet.jpg'
+  //   }
+  // })
 
   const pvcCabinetCategory = await prisma.category.create({
     data: {
       name: 'PVC Cabinet',
+      slug: createSlug('PVC Cabinet'),
       description: 'Durable and water-resistant PVC bathroom cabinets',
       image: '/images/Bathroom/Bathroom Cabinet/Cateogry_Bathroom_Cabinet.jpg'
     }
@@ -99,6 +111,7 @@ async function main() {
   const plywoodCabinetCategory = await prisma.category.create({
     data: {
       name: 'Plywood Cabinet',
+      slug: createSlug('Plywood Cabinet'),
       description: 'Premium plywood bathroom cabinets with elegant finishes',
       image: '/images/Bathroom/Bathroom Cabinet/Cateogry_Bathroom_Cabinet.jpg'
     }
@@ -107,6 +120,7 @@ async function main() {
   const rockStoneCabinetCategory = await prisma.category.create({
     data: {
       name: 'Rock Stone Cabinet',
+      slug: createSlug('Rock Stone Cabinet'),
       description: 'Natural stone bathroom cabinets for luxury interiors',
       image: '/images/Bathroom/Bathroom Cabinet/Cateogry_Bathroom_Cabinet.jpg'
     }
@@ -115,6 +129,7 @@ async function main() {
   const bathtubsCategory = await prisma.category.create({
     data: {
       name: 'Bathtubs',
+      slug: createSlug('Bathtubs'),
       description: 'Luxury bathtubs for ultimate relaxation and comfort',
       image: '/images/Bathroom/Bathtub/Category_Bathtub.jpg'
     }
@@ -124,6 +139,7 @@ async function main() {
   const smartControlsCategory = await prisma.category.create({
     data: {
       name: 'Smart Controls and Lighting',
+      slug: createSlug('Smart Controls and Lighting'),
       description: 'Smart lighting controls and automated systems',
       image: '/images/Lighting/Smart-Controls-and-Lighting/Category_Smart_Controls.jpg'
     }
@@ -132,6 +148,7 @@ async function main() {
   const switchesSocketsCategory = await prisma.category.create({
     data: {
       name: 'Switches & Sockets',
+      slug: createSlug('Switches & Sockets'),
       description: 'Premium electrical switches, sockets, and controls',
       image: '/images/Lighting/Switches-and-Sockets/Category_Switches.jpg'
     }
@@ -140,6 +157,7 @@ async function main() {
   const tableMirrorLampsCategory = await prisma.category.create({
     data: {
       name: 'Table and Mirror Lamps',
+      slug: createSlug('Table and Mirror Lamps'),
       description: 'Elegant table lamps and mirror lighting solutions',
       image: '/images/Lighting/Table-and-Mirror Lamps/Category_Table_Lamps.jpg'
     }
@@ -148,6 +166,7 @@ async function main() {
   const ledStripsCategory = await prisma.category.create({
     data: {
       name: 'LED Strips and Tube Lights',
+      slug: createSlug('LED Strips and Tube Lights'),
       description: 'Flexible LED strips and tube lighting for various applications',
       image: '/images/Lighting/LED-Strips-and-Tube lights/Category_LED_Strips.jpg'
     }
@@ -156,6 +175,7 @@ async function main() {
   const ledOutdoorCategory = await prisma.category.create({
     data: {
       name: 'LED Outdoor',
+      slug: createSlug('LED Outdoor'),
       description: 'Professional outdoor LED lighting solutions',
       image: '/images/Lighting/LED-Outdoor/Category_LED_Outdoor_Lighting.png'
     }
@@ -164,6 +184,7 @@ async function main() {
   const ledPanelCategory = await prisma.category.create({
     data: {
       name: 'LED Panel',
+      slug: createSlug('LED Panel'),
       description: 'Efficient LED panel lights for offices and commercial spaces',
       image: '/images/Lighting/LED-Panel/Category_LED_Panel.jpg'
     }
@@ -172,6 +193,7 @@ async function main() {
   const ledPowerBulbCategory = await prisma.category.create({
     data: {
       name: 'LED Power Bulb',
+      slug: createSlug('LED Power Bulb'),
       description: 'High-power LED bulbs for residential and commercial use',
       image: '/images/Lighting/LED-Power-Bulb/Category_LED_Power_Bulb.jpg'
     }
@@ -180,6 +202,7 @@ async function main() {
   const ledSpotlightCategory = await prisma.category.create({
     data: {
       name: 'LED Spotlight',
+      slug: createSlug('LED Spotlight'),
       description: 'Focused LED spotlights for accent and task lighting',
       image: '/images/Lighting/LED-Spotlight/Category_LED_Spotlight.jpg'
     }
@@ -188,6 +211,7 @@ async function main() {
   const ledIndustrialCategory = await prisma.category.create({
     data: {
       name: 'LED Industrial',
+      slug: createSlug('LED Industrial'),
       description: 'Heavy-duty LED lighting for industrial applications',
       image: '/images/Lighting/LED-Industrial/Category_LED_Industrial.jpg'
     }
@@ -196,6 +220,7 @@ async function main() {
   const ledLandscapeCategory = await prisma.category.create({
     data: {
       name: 'LED Landscape',
+      slug: createSlug('LED Landscape'),
       description: 'Landscape and garden LED lighting solutions',
       image: '/images/Lighting/LED-Landscape/Category_LED_Landscape.jpg'
     }
@@ -204,6 +229,7 @@ async function main() {
   const ledLinearIndoorCategory = await prisma.category.create({
     data: {
       name: 'LED Linear Indoor',
+      slug: createSlug('LED Linear Indoor'),
       description: 'Linear LED lighting for modern indoor spaces',
       image: '/images/Lighting/LED-Linear-Indoor/Category_LED_Linear.jpg'
     }
@@ -212,6 +238,7 @@ async function main() {
   const ledFloodLightCategory = await prisma.category.create({
     data: {
       name: 'LED Flood Light',
+      slug: createSlug('LED Flood Light'),
       description: 'High-intensity LED flood lights for large area illumination',
       image: '/images/Lighting/LED-Flood-Light/Category_LED_Flood.jpg'
     }
@@ -220,6 +247,7 @@ async function main() {
   const ceilingLampsCategory = await prisma.category.create({
     data: {
       name: 'Ceiling Lamps',
+      slug: createSlug('Ceiling Lamps'),
       description: 'Modern ceiling lamps and fixtures',
       image: '/images/Lighting/Ceiling-Lamps/Category_Ceiling_Lamps.jpg'
     }
@@ -228,6 +256,7 @@ async function main() {
   const ledDownlightCategory = await prisma.category.create({
     data: {
       name: 'LED Downlight',
+      slug: createSlug('LED Downlight'),
       description: 'Recessed LED downlights for clean, modern lighting',
       image: '/images/Lighting/LED-Downlight/Category_LED_Downlight.jpg'
     }
@@ -237,6 +266,7 @@ async function main() {
   const ledMirrorCategory = await prisma.category.create({
     data: {
       name: 'LED Mirror',
+      slug: createSlug('LED Mirror'),
       description: 'Premium LED mirrors with integrated lighting for bathrooms and vanities',
       image: '/images/LED-Mirror/Category_Led_Mirror.jpg'
     }

@@ -10,10 +10,12 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card'
-import { Trash2, Plus, Minus } from 'lucide-react'
+import { Trash2, Plus, Minus, CreditCard, Loader2 } from 'lucide-react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { AdvancedDiscountCode } from '@/components/cart/advanced-discount-code'
+import { useToast } from '@/hooks/use-toast'
+import { useSession } from 'next-auth/react'
 
 interface CartCalculationResult {
   subtotal: number
@@ -35,6 +37,9 @@ export default function CartPage() {
   const cart = useCart()
   const [appliedCoupons, setAppliedCoupons] = useState<string[]>([])
   const [calculationResult, setCalculationResult] = useState<CartCalculationResult | null>(null)
+  const [isCheckingOut, setIsCheckingOut] = useState(false)
+  const { toast } = useToast()
+  const { data: session } = useSession()
 
   // Convert cart items to the format expected by the promotion system
   const cartItems = cart.items.map(item => ({
@@ -58,10 +63,78 @@ export default function CartPage() {
     total: fallbackTotal
   }
 
+  // Handle direct checkout to Stripe
+  const handleCheckout = async () => {
+    if (!session) {
+      toast({
+        title: 'Sign in required',
+        description: 'Please sign in to proceed with checkout.',
+        variant: 'destructive',
+      })
+      // Redirect to sign in with return URL
+      window.location.href = '/auth/signin?callbackUrl=' + encodeURIComponent('/cart')
+      return
+    }
+
+    if (cart.items.length === 0) {
+      toast({
+        title: 'Cart is empty',
+        description: 'Please add items to your cart before checking out.',
+        variant: 'destructive',
+      })
+      return
+    }
+
+    setIsCheckingOut(true)
+
+    try {
+      // Calculate products subtotal for server validation
+      const productsSubtotal = cart.items.reduce((sum, item) => sum + item.price * item.quantity, 0)
+
+      // Create Stripe checkout session
+      const response = await fetch('/api/stripe/checkout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          items: cart.items.map(item => ({
+            productId: item.productId,
+            quantity: item.quantity
+          })),
+          totalAmount: productsSubtotal, // Send only products subtotal for validation
+          appliedCoupons: appliedCoupons, // Include any applied coupons
+        }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to create checkout session')
+      }
+
+      const { url } = await response.json()
+
+      // Clear cart and redirect to Stripe Checkout
+      cart.clearCart()
+      
+      // Redirect to Stripe Checkout
+      window.location.href = url
+    } catch (error) {
+      console.error('[CART_CHECKOUT]', error)
+      toast({
+        title: 'Checkout Error',
+        description: error instanceof Error ? error.message : 'Something went wrong. Please try again.',
+        variant: 'destructive',
+      })
+    } finally {
+      setIsCheckingOut(false)
+    }
+  }
+
   if (cart.items.length === 0) {
     return (
-      <div className='min-h-screen bg-gradient-to-br from-gray-50 via-white to-brand-50'>
-        <div className='container mx-auto px-4 pb-16 flex items-center justify-center min-h-[60vh]'>
+      <div className='bg-gradient-to-br from-gray-50 via-white to-brand-50 min-h-[calc(100vh-8rem)]'>
+        <div className='container mx-auto px-4 py-16 flex items-center justify-center min-h-[60vh]'>
           <Card className='max-w-md w-full shadow-card border-0 text-center'>
             <CardHeader className='pb-4'>
               <div className='mx-auto w-16 h-16 bg-brand-100 rounded-full flex items-center justify-center mb-4'>
@@ -93,8 +166,8 @@ export default function CartPage() {
   }
 
   return (
-    <div className='min-h-screen bg-gradient-to-br from-gray-50 via-white to-brand-50'>
-      <div className='container mx-auto px-4 pb-8 max-w-6xl'>
+    <div className='bg-gradient-to-br from-gray-50 via-white to-brand-50 min-h-[calc(100vh-8rem)]'>
+      <div className='container mx-auto px-4 py-8 max-w-6xl'>
         {/* Page Header */}
         <div className='text-center mb-8'>
           <h1 className='text-4xl font-bold text-brand mb-2'>Shopping Cart</h1>
@@ -203,7 +276,7 @@ export default function CartPage() {
           {/* Checkout Actions */}
           <Card className="shadow-card border-0 sticky top-8">
             <CardHeader>
-              <CardTitle className="text-xl">Ready to Checkout?</CardTitle>
+              <CardTitle className="text-xl">Ready to Complete Your Order?</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
@@ -221,14 +294,30 @@ export default function CartPage() {
               </div>
             </CardContent>
             <CardFooter className='flex flex-col gap-3'>
-              <Button className='w-full btn-brand' size='lg' asChild>
-                <Link href='/checkout'>Proceed to Checkout</Link>
+              <Button 
+                className='w-full btn-brand' 
+                size='lg' 
+                onClick={handleCheckout}
+                disabled={isCheckingOut || cart.items.length === 0}
+              >
+                {isCheckingOut ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Processing...
+                  </>
+                ) : (
+                  <>
+                    <CreditCard className="mr-2 h-4 w-4" />
+                    Complete Order
+                  </>
+                )}
               </Button>
               <Button variant='outline' className='w-full' asChild>
                 <Link href='/products'>Continue Shopping</Link>
               </Button>
             </CardFooter>
           </Card>
+        </div>
         </div>
       </div>
     </div>

@@ -40,6 +40,27 @@ model User {
   isVerified    Boolean         @default(false)
   lastLoginAt   DateTime?
   
+  // KYC/KYB Status
+  kycStatus     KYCStatus       @default(NOT_STARTED)
+  kybStatus     KYBStatus       @default(NOT_STARTED)
+  verificationLevel VerificationLevel @default(BASIC)
+  
+  // Verification documents
+  verificationDocuments VerificationDocument[]
+  
+  // Password security
+  passwordHistory       PasswordHistory[]
+  loginAttempts         LoginAttempt[]
+  
+  // Onboarding
+  onboardingStep OnboardingStep  @default(REGISTRATION)
+  onboardingCompletedAt DateTime?
+  
+  // Risk assessment
+  riskLevel     RiskLevel       @default(LOW)
+  riskScore     Float?
+  lastRiskAssessment DateTime?
+  
   // Invitations
   invitedBy     String?         // User ID who invited this user
   invitedAt     DateTime?
@@ -64,6 +85,13 @@ model User {
   ownedCompanies   Company[]       @relation("CompanyOwner")
   sentInvitations  UserInvitation[] @relation("InvitationSender")
   receivedInvitations UserInvitation[] @relation("InvitationReceiver")
+  
+  // KYC/KYB relations
+  onboardingSession OnboardingSession?
+  
+  // Notification relations
+  notifications     Notification[]
+  notificationPreferences NotificationPreference?
   
   @@index([companyId])
   @@index([email])
@@ -506,6 +534,133 @@ model CompanySettings {
   updatedAt                DateTime @updatedAt
 }
 
+model VerificationDocument {
+  id              String              @id @default(cuid())
+  userId          String
+  user            User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Document details
+  type            DocumentType
+  category        DocumentCategory    @default(IDENTITY)
+  fileName        String
+  fileUrl         String
+  fileMimeType    String
+  fileSize        Int
+  
+  // Verification status
+  status          DocumentStatus      @default(PENDING)
+  verifiedAt      DateTime?
+  verifiedBy      String?             // Admin user ID
+  
+  // Document metadata
+  documentNumber  String?             // ID number, passport number, etc.
+  issuedDate      DateTime?
+  expiryDate      DateTime?
+  issuingAuthority String?
+  
+  // Verification notes
+  rejectionReason String?
+  verificationNotes String?
+  
+  // Metadata
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+  
+  @@index([userId, type])
+  @@index([status])
+}
+
+model OnboardingSession {
+  id              String              @id @default(cuid())
+  userId          String              @unique
+  user            User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Session data
+  currentStep     OnboardingStep      @default(REGISTRATION)
+  stepData        Json                // Store step-specific data
+  completedSteps  OnboardingStep[]
+  
+  // Progress tracking
+  startedAt       DateTime            @default(now())
+  lastActiveAt    DateTime            @default(now())
+  completedAt     DateTime?
+  
+  // Verification attempts
+  verificationAttempts Int             @default(0)
+  lastVerificationAttempt DateTime?
+  
+  @@index([currentStep])
+}
+
+model Notification {
+  id              String              @id @default(cuid())
+  userId          String
+  user            User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Notification content
+  title           String
+  body            String
+  icon            String?
+  badge           String?
+  image           String?
+  data            Json                @default("{}")
+  actions         Json                @default("[]")
+  
+  // Notification settings
+  tag             String?
+  requireInteraction Boolean          @default(false)
+  silent          Boolean             @default(false)
+  ttl             Int?                // Time to live in seconds
+  
+  // Scheduling
+  scheduleAt      DateTime?
+  expiresAt       DateTime?
+  
+  // Status tracking
+  status          NotificationStatus  @default(PENDING)
+  sentAt          DateTime?
+  readAt          DateTime?
+  clickedAt       DateTime?
+  
+  // Categorization
+  priority        NotificationPriority @default(NORMAL)
+  category        String              @default("general")
+  
+  // Metadata
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+  
+  @@index([userId, readAt])
+  @@index([status, scheduleAt])
+  @@index([category])
+}
+
+model NotificationPreference {
+  id              String              @id @default(cuid())
+  userId          String              @unique
+  user            User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Channel preferences
+  emailNotifications    Boolean       @default(true)
+  pushNotifications     Boolean       @default(true)
+  smsNotifications      Boolean       @default(false)
+  
+  // Content preferences
+  orderUpdates          Boolean       @default(true)
+  promotionalOffers     Boolean       @default(true)
+  priceAlerts           Boolean       @default(false)
+  securityAlerts        Boolean       @default(true)
+  systemNotifications   Boolean       @default(true)
+  
+  // Timing preferences
+  quietHoursStart       String?       // "22:00"
+  quietHoursEnd         String?       // "08:00"
+  timezone              String        @default("Asia/Dubai")
+  
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+}
+
 model UserInvitation {
   id              String              @id @default(cuid())
   email           String
@@ -575,6 +730,110 @@ enum CatalogAccessMode {
 enum Role {
   USER
   ADMIN
+}
+
+// KYC/KYB Enums
+enum KYCStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  PENDING_REVIEW
+  APPROVED
+  REJECTED
+  EXPIRED
+}
+
+enum KYBStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  PENDING_REVIEW
+  APPROVED
+  REJECTED
+  EXPIRED
+}
+
+enum VerificationLevel {
+  BASIC           // Email verification only
+  STANDARD        // Email + Phone + Basic KYC
+  ENHANCED        // Full KYC with documents
+  PREMIUM         // Full KYB for business accounts
+}
+
+enum OnboardingStep {
+  REGISTRATION    // Initial account creation
+  EMAIL_VERIFICATION
+  PHONE_VERIFICATION
+  PROFILE_COMPLETION
+  DOCUMENT_UPLOAD
+  IDENTITY_VERIFICATION
+  ADDRESS_VERIFICATION
+  BUSINESS_VERIFICATION  // For business accounts
+  COMPLIANCE_CHECK
+  APPROVAL_PENDING
+  COMPLETED
+}
+
+enum DocumentType {
+  // Individual KYC Documents
+  NATIONAL_ID
+  PASSPORT
+  DRIVING_LICENSE
+  UTILITY_BILL
+  BANK_STATEMENT
+  
+  // Business KYB Documents
+  BUSINESS_LICENSE
+  TAX_CERTIFICATE
+  VAT_CERTIFICATE
+  MEMORANDUM_OF_ASSOCIATION
+  CERTIFICATE_OF_INCORPORATION
+  BOARD_RESOLUTION
+  AUTHORIZED_SIGNATORY_LIST
+  
+  // Additional Documents
+  PROOF_OF_ADDRESS
+  FINANCIAL_STATEMENT
+  BANK_LETTER
+  OTHER
+}
+
+enum DocumentCategory {
+  IDENTITY
+  ADDRESS
+  BUSINESS
+  FINANCIAL
+  COMPLIANCE
+}
+
+enum DocumentStatus {
+  PENDING
+  UNDER_REVIEW
+  APPROVED
+  REJECTED
+  EXPIRED
+  RESUBMISSION_REQUIRED
+}
+
+enum RiskLevel {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum NotificationStatus {
+  PENDING
+  SCHEDULED
+  SENT
+  DELIVERED
+  FAILED
+  CANCELLED
+}
+
+enum NotificationPriority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
 }
 
 enum OrderStatus {
@@ -718,6 +977,43 @@ model CartRule {
   createdBy        String?
 }
 
+model Banner {
+  id           String      @id @default(cuid())
+  title        String
+  description  String?
+  imageUrl     String
+  linkUrl      String?
+  linkText     String?
+  position     BannerPosition @default(HERO)
+  isActive     Boolean     @default(true)
+  
+  // Scheduling
+  startDate    DateTime?
+  endDate      DateTime?
+  
+  // Display settings
+  displayOrder Int         @default(1)
+  
+  // Analytics
+  clickCount   Int         @default(0)
+  impressions  Int         @default(0)
+  
+  // Metadata
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  createdBy    String?     // Admin user ID
+  
+  @@index([position, displayOrder])
+  @@index([isActive, startDate, endDate])
+}
+
+enum BannerPosition {
+  HERO
+  SECONDARY
+  SIDEBAR
+  FOOTER
+}
+
 model CustomerSegment {
   id           String   @id @default(cuid())
   name         String
@@ -753,4 +1049,30 @@ model Coupon {
   active           Boolean         @default(true)
   createdAt        DateTime        @default(now())
   updatedAt        DateTime        @updatedAt
+}
+
+// Password Security Models
+model PasswordHistory {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  passwordHash String
+  createdAt    DateTime @default(now())
+  
+  @@index([userId, createdAt])
+}
+
+model LoginAttempt {
+  id          String   @id @default(cuid())
+  userId      String?
+  user        User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  email       String
+  ipAddress   String?
+  userAgent   String?
+  successful  Boolean  @default(false)
+  attemptedAt DateTime @default(now())
+  
+  @@index([userId, attemptedAt])
+  @@index([email, attemptedAt])
+  @@index([ipAddress, attemptedAt])
 }

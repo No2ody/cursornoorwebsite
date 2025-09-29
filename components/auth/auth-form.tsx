@@ -13,6 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Separator } from '@/components/ui/separator'
 // import { Alert, AlertDescription } from '@/components/ui/alert'
 import { useToast } from '@/hooks/use-toast'
+import { PasswordStrength } from '@/components/auth/password-strength'
 import Image from 'next/image'
 
 interface AuthFormProps {
@@ -313,6 +314,17 @@ export function AuthForm({ mode = 'signin', callbackUrl = '/' }: AuthFormProps) 
                     </div>
                     {errors.password && (
                       <p className="text-sm text-red-600">{errors.password}</p>
+                    )}
+                    
+                    {/* Password Strength Indicator */}
+                    {currentTab === 'signup' && formData.password && (
+                      <div className="mt-3">
+                        <PasswordStrength 
+                          password={formData.password}
+                          showFeedback={true}
+                          className="border rounded-lg p-3 bg-gray-50"
+                        />
+                      </div>
                     )}
                   </div>
 

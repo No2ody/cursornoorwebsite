@@ -3,9 +3,15 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
-import { PackageSearch, User2, MapPin, Heart } from 'lucide-react'
+import { PackageSearch, User2, MapPin, Heart, LayoutDashboard } from 'lucide-react'
 
 const routes = [
+  {
+    label: 'Overview',
+    icon: LayoutDashboard,
+    href: '/dashboard',
+    color: 'text-blue-500',
+  },
   {
     label: 'Orders',
     icon: PackageSearch,
@@ -36,17 +42,26 @@ export function DashboardNav() {
   const pathname = usePathname()
 
   return (
-    <nav className='flex flex-col space-y-2'>
+    <nav className='space-y-1'>
+      <div className='mb-4'>
+        <h3 className='text-lg font-semibold text-brand'>Dashboard</h3>
+        <p className='text-sm text-muted-foreground'>Manage your account</p>
+      </div>
       {routes.map((route) => (
         <Link
           key={route.href}
           href={route.href}
           className={cn(
-            'flex items-center gap-x-2 rounded-lg px-3 py-2 text-sm font-medium hover:bg-accent hover:text-accent-foreground',
-            pathname === route.href ? 'bg-accent' : 'transparent'
+            'flex items-center gap-x-3 rounded-lg px-4 py-3 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground',
+            pathname === route.href 
+              ? 'bg-brand text-white hover:bg-brand-700' 
+              : 'text-gray-700 hover:bg-gray-100'
           )}
         >
-          <route.icon className={cn('h-5 w-5', route.color)} />
+          <route.icon className={cn(
+            'h-5 w-5', 
+            pathname === route.href ? 'text-white' : route.color
+          )} />
           {route.label}
         </Link>
       ))}

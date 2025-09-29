@@ -17,13 +17,19 @@ export default async function DashboardLayout({
   return (
     <div className='flex min-h-screen flex-col'>
       <Header />
-      <div className='container grid flex-1 gap-12 px-6 py-6 md:grid-cols-[200px_1fr]'>
-        <aside className='hidden w-[200px] flex-col md:flex'>
-          <DashboardNav />
-        </aside>
-        <main className='flex w-full flex-1 flex-col overflow-hidden'>
-          {children}
-        </main>
+      <div className='flex-1 pt-32'>
+        <div className='container mx-auto px-4 py-6 max-w-7xl'>
+          <div className='grid gap-8 md:grid-cols-[240px_1fr]'>
+            <aside className='hidden md:flex md:flex-col'>
+              <div className='sticky top-48'>
+                <DashboardNav />
+              </div>
+            </aside>
+            <main className='flex-1 min-w-0'>
+              {children}
+            </main>
+          </div>
+        </div>
       </div>
     </div>
   )

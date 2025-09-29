@@ -13,6 +13,7 @@ import {
   BarChart,
   Tag,
   Folder,
+  Image as ImageIcon,
 } from 'lucide-react'
 
 const navigation = [
@@ -21,6 +22,7 @@ const navigation = [
   { name: 'Products', href: '/admin/products', icon: Package },
   { name: 'Categories', href: '/admin/categories', icon: Folder },
   { name: 'Brands', href: '/admin/brands', icon: Tag },
+  { name: 'Banners', href: '/admin/banners', icon: ImageIcon },
   { name: 'Orders', href: '/admin/orders', icon: ShoppingCart },
   { name: 'Customers', href: '/admin/customers', icon: Users },
   { name: 'Settings', href: '/admin/settings', icon: Settings },

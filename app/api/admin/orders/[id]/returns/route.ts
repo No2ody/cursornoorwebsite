@@ -31,21 +31,7 @@ export async function GET(
     const returns = await prisma.orderReturn.findMany({
       where: { orderId },
       include: {
-        items: {
-          include: {
-            orderItem: {
-              include: {
-                product: {
-                  select: {
-                    id: true,
-                    name: true,
-                    images: true,
-                  },
-                },
-              },
-            },
-          },
-        },
+        items: true,
       },
       orderBy: { createdAt: 'desc' },
     })
@@ -65,6 +51,10 @@ export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  // Extract order ID from params
+  const { id } = await params
+  
+  // TODO: Implement return request processing for order ${id}
   try {
     const session = await auth()
 

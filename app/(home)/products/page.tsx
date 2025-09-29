@@ -57,9 +57,9 @@ export default function ProductsPage() {
   }, [category, search, minPrice, maxPrice, brands, rating, availability, sort, currentPage])
 
   return (
-    <div className='min-h-screen'>
+    <div className='min-h-[calc(100vh-8rem)]'>
       {/* Enhanced Hero Section */}
-      <section className="hero-gradient text-white overflow-hidden relative pb-20">
+      <section className="hero-gradient text-white overflow-hidden relative pb-20 pt-8">
         {/* Background Pattern */}
         <div className='absolute inset-0 opacity-10'>
           <div className='absolute inset-0' style={{

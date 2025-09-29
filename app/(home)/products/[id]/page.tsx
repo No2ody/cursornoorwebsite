@@ -40,9 +40,9 @@ export default async function ProductPage(props: ProductPageProps) {
   const product = await getProduct(id)
 
   return (
-    <div className='min-h-screen bg-gradient-to-br from-gray-50 via-white to-brand-50'>
+    <div className='bg-gradient-to-br from-gray-50 via-white to-brand-50 min-h-[calc(100vh-8rem)]'>
       {/* Breadcrumb Navigation */}
-      <section className="pb-8 bg-white">
+      <section className="py-8 bg-white">
         <div className='container mx-auto px-4 sm:px-6 lg:px-8'>
           <ProductBreadcrumb product={product} />
         </div>

@@ -63,11 +63,11 @@ export function generateInvitationToken(): string {
 
 // Permission checking utilities
 export function canManageUsers(role: CompanyRole): boolean {
-  return [CompanyRole.OWNER, CompanyRole.ADMIN, CompanyRole.MANAGER].includes(role)
+  return [CompanyRole.OWNER, CompanyRole.ADMIN, CompanyRole.MANAGER].includes(role as any)
 }
 
 export function canPlaceOrders(role: CompanyRole): boolean {
-  return [CompanyRole.OWNER, CompanyRole.ADMIN, CompanyRole.MANAGER, CompanyRole.PURCHASER].includes(role)
+  return [CompanyRole.OWNER, CompanyRole.ADMIN, CompanyRole.MANAGER, CompanyRole.PURCHASER].includes(role as any)
 }
 
 export function canViewOrders(role: CompanyRole): boolean {
@@ -75,11 +75,11 @@ export function canViewOrders(role: CompanyRole): boolean {
 }
 
 export function canManageCompany(role: CompanyRole): boolean {
-  return [CompanyRole.OWNER, CompanyRole.ADMIN].includes(role)
+  return [CompanyRole.OWNER, CompanyRole.ADMIN].includes(role as any)
 }
 
 export function canInviteUsers(role: CompanyRole): boolean {
-  return [CompanyRole.OWNER, CompanyRole.ADMIN, CompanyRole.MANAGER].includes(role)
+  return [CompanyRole.OWNER, CompanyRole.ADMIN, CompanyRole.MANAGER].includes(role as any)
 }
 
 // Company management functions
