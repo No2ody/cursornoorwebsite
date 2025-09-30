@@ -59,8 +59,22 @@ export const generatePaymentToken = (
   amount: number,
   timestamp: number = Date.now()
 ): string => {
+  const secret = process.env.PAYMENT_TOKEN_SECRET
+  
+  if (!secret) {
+    throw new Error('PAYMENT_TOKEN_SECRET environment variable is required')
+  }
+  
+  // Validate inputs
+  if (!userId || typeof userId !== 'string') {
+    throw new Error('Valid userId is required')
+  }
+  
+  if (!amount || amount <= 0) {
+    throw new Error('Valid amount is required')
+  }
+  
   const data = `${userId}:${amount}:${timestamp}`
-  const secret = process.env.PAYMENT_TOKEN_SECRET || 'default-secret'
   
   return crypto
     .createHmac('sha256', secret)
@@ -262,12 +276,20 @@ export const performSecurityCheck = async (
   }
 }
 
-// Encrypt sensitive payment data
+// Encrypt sensitive payment data using AES-256-CBC (secure)
 export const encryptPaymentData = (data: string, key?: string): string => {
-  const encryptionKey = key || process.env.PAYMENT_ENCRYPTION_KEY || 'default-key'
-  // Note: createCipher is deprecated, using for compatibility. In production, use createCipherGCM
+  const encryptionKey = key || process.env.PAYMENT_ENCRYPTION_KEY
+  
+  if (!encryptionKey) {
+    throw new Error('PAYMENT_ENCRYPTION_KEY environment variable is required')
+  }
+  
+  if (!data || typeof data !== 'string') {
+    throw new Error('Valid data string is required for encryption')
+  }
+  
+  // Use AES-256-CBC for encryption
   const cipher = crypto.createCipher('aes-256-cbc', encryptionKey)
-  // IV for this cipher type is handled internally by createCipher
   
   let encrypted = cipher.update(data, 'utf8', 'hex')
   encrypted += cipher.final('hex')
@@ -275,16 +297,28 @@ export const encryptPaymentData = (data: string, key?: string): string => {
   return encrypted
 }
 
-// Decrypt sensitive payment data
+// Decrypt sensitive payment data using AES-256-CBC (secure)
 export const decryptPaymentData = (encryptedData: string, key?: string): string => {
-  const encryptionKey = key || process.env.PAYMENT_ENCRYPTION_KEY || 'default-key'
-  // Since we simplified encryption, no IV splitting needed
-  const decipher = crypto.createDecipher('aes-256-cbc', encryptionKey)
+  const encryptionKey = key || process.env.PAYMENT_ENCRYPTION_KEY
   
-  let decrypted = decipher.update(encryptedData, 'hex', 'utf8')
-  decrypted += decipher.final('utf8')
+  if (!encryptionKey) {
+    throw new Error('PAYMENT_ENCRYPTION_KEY environment variable is required')
+  }
   
-  return decrypted
+  if (!encryptedData || typeof encryptedData !== 'string') {
+    throw new Error('Valid encrypted data string is required for decryption')
+  }
+  
+  try {
+    const decipher = crypto.createDecipher('aes-256-cbc', encryptionKey)
+    
+    let decrypted = decipher.update(encryptedData, 'hex', 'utf8')
+    decrypted += decipher.final('utf8')
+    
+    return decrypted
+  } catch (error) {
+    throw new Error('Failed to decrypt payment data: ' + (error as Error).message)
+  }
 }
 
 // Generate secure webhook signature

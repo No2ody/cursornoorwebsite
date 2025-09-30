@@ -1,26 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@/auth'
 import { prisma } from '@/lib/prisma'
+import { validateInput, commonSchemas } from '@/lib/validation'
+import { requireAuth, auditLog, applySecurityHeaders } from '@/lib/authorization'
 import { z } from 'zod'
 
 const wishlistSchema = z.object({
-  productId: z.string().min(1),
+  productId: commonSchemas.id,
 })
 
 export async function GET() {
   try {
-    const session = await auth()
-    
-    if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      )
-    }
+    // Require authentication
+    const authResult = await requireAuth()
+    if (authResult instanceof NextResponse) return authResult
+    const { user } = authResult
 
     const wishlistItems = await prisma.wishlistItem.findMany({
       where: {
-        userId: session.user.id,
+        userId: user.id,
       },
       include: {
         product: {
@@ -34,7 +31,8 @@ export async function GET() {
       },
     })
 
-    return NextResponse.json({ wishlistItems })
+    const response = NextResponse.json({ wishlistItems })
+    return applySecurityHeaders(response)
   } catch (error) {
     console.error('Failed to fetch wishlist:', error)
     return NextResponse.json(
@@ -46,17 +44,23 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await auth()
-    
-    if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      )
-    }
+    // Require authentication
+    const authResult = await requireAuth()
+    if (authResult instanceof NextResponse) return authResult
+    const { user } = authResult
 
     const body = await request.json()
-    const { productId } = wishlistSchema.parse(body)
+    
+    // Validate input
+    const validation = validateInput(wishlistSchema, body)
+    if (!validation.success) {
+      return NextResponse.json(
+        { error: 'Invalid input', details: validation.errors },
+        { status: 400 }
+      )
+    }
+    
+    const { productId } = validation.data!
 
     // Check if product exists
     const product = await prisma.product.findUnique({
@@ -74,7 +78,7 @@ export async function POST(request: NextRequest) {
     const existingItem = await prisma.wishlistItem.findUnique({
       where: {
         userId_productId: {
-          userId: session.user.id,
+          userId: user.id,
           productId,
         },
       },
@@ -90,7 +94,7 @@ export async function POST(request: NextRequest) {
     // Add to wishlist
     const wishlistItem = await prisma.wishlistItem.create({
       data: {
-        userId: session.user.id,
+        userId: user.id,
         productId,
       },
       include: {
@@ -102,7 +106,14 @@ export async function POST(request: NextRequest) {
       },
     })
 
-    return NextResponse.json({ wishlistItem })
+    // Audit log the wishlist addition
+    await auditLog('ADD_TO_WISHLIST', 'wishlist', wishlistItem.id, user.id, {
+      productId,
+      productName: product.name,
+    })
+
+    const response = NextResponse.json({ wishlistItem })
+    return applySecurityHeaders(response)
   } catch (error) {
     console.error('Failed to add to wishlist:', error)
     
@@ -122,14 +133,10 @@ export async function POST(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
-    const session = await auth()
-    
-    if (!session?.user?.id) {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      )
-    }
+    // Require authentication
+    const authResult = await requireAuth()
+    if (authResult instanceof NextResponse) return authResult
+    const { user } = authResult
 
     const { searchParams } = new URL(request.url)
     const productId = searchParams.get('productId')
@@ -141,10 +148,20 @@ export async function DELETE(request: NextRequest) {
       )
     }
 
+    // Validate productId format
+    const productIdSchema = z.object({ productId: commonSchemas.id })
+    const validation = validateInput(productIdSchema, { productId })
+    if (!validation.success) {
+      return NextResponse.json(
+        { error: 'Invalid product ID format', details: validation.errors },
+        { status: 400 }
+      )
+    }
+
     // Remove from wishlist
     const deletedItem = await prisma.wishlistItem.deleteMany({
       where: {
-        userId: session.user.id,
+        userId: user.id,
         productId,
       },
     })
@@ -156,7 +173,13 @@ export async function DELETE(request: NextRequest) {
       )
     }
 
-    return NextResponse.json({ success: true })
+    // Audit log the wishlist removal
+    await auditLog('REMOVE_FROM_WISHLIST', 'wishlist', productId, user.id, {
+      productId,
+    })
+
+    const response = NextResponse.json({ success: true })
+    return applySecurityHeaders(response)
   } catch (error) {
     console.error('Failed to remove from wishlist:', error)
     return NextResponse.json(

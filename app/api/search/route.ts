@@ -1,6 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server'
 import prisma from '@/lib/prisma'
 import { Prisma } from '@prisma/client'
+import { withSearchRateLimit } from '@/lib/rate-limit'
+
+// Sanitize search query to prevent injection attacks
+function sanitizeSearchQuery(query: string): string {
+  if (!query || typeof query !== 'string') return ''
+  
+  // Remove potentially dangerous characters but keep common search characters
+  return query
+    .replace(/[<>'"&]/g, '') // Remove HTML/script injection chars
+    .replace(/[{}[\]]/g, '') // Remove object notation
+    .replace(/[;()]/g, '') // Remove SQL injection chars
+    .trim()
+    .substring(0, 100) // Limit length
+}
 
 interface SearchResult {
   id: string
@@ -27,15 +41,24 @@ interface SearchResponse {
   correctedQuery?: string
 }
 
-export async function GET(request: NextRequest) {
+export const GET = withSearchRateLimit(async (request: NextRequest) => {
   const startTime = Date.now()
   const { searchParams } = new URL(request.url)
-  const query = searchParams.get('q') || ''
+  const rawQuery = searchParams.get('q') || ''
   
   try {
-    const limit = parseInt(searchParams.get('limit') || '10')
+    // Input validation and sanitization
+    const query = sanitizeSearchQuery(rawQuery)
+    const limit = Math.min(Math.max(parseInt(searchParams.get('limit') || '10'), 1), 50) // Limit between 1-50
     const categoryId = searchParams.get('category')
-    // const includeCategories = searchParams.get('includeCategories') === 'true'
+    
+    // Validate categoryId if provided
+    if (categoryId && !/^[a-zA-Z0-9\-_]+$/.test(categoryId)) {
+      return NextResponse.json(
+        { error: 'Invalid category ID format' },
+        { status: 400 }
+      )
+    }
     
     if (!query.trim()) {
       return NextResponse.json({
@@ -45,6 +68,14 @@ export async function GET(request: NextRequest) {
         searchTime: Date.now() - startTime,
         query: ''
       })
+    }
+    
+    // Additional query validation
+    if (query.length > 100) {
+      return NextResponse.json(
+        { error: 'Search query too long (max 100 characters)' },
+        { status: 400 }
+      )
     }
 
     // Clean and prepare search terms
@@ -289,20 +320,37 @@ export async function GET(request: NextRequest) {
         suggestions: [],
         totalResults: 0,
         searchTime: Date.now() - startTime,
-        query: query || ''
+        query: ''
       },
       { status: 500 }
     )
   }
-}
+})
 
-// Helper function to highlight matching terms
+// Helper function to highlight matching terms (XSS-safe)
 function highlightText(text: string, terms: string[]): string {
-  let highlighted = text
-  terms.forEach(term => {
-    const regex = new RegExp(`(${term})`, 'gi')
+  // First, escape HTML to prevent XSS
+  const escapeHtml = (str: string) => {
+    return str
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#x27;')
+  }
+  
+  let highlighted = escapeHtml(text)
+  
+  // Only highlight if terms are safe (alphanumeric + spaces + common punctuation)
+  const safeTerms = terms.filter(term => /^[a-zA-Z0-9\s\-_.]+$/.test(term))
+  
+  safeTerms.forEach(term => {
+    // Escape the term for regex
+    const escapedTerm = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+    const regex = new RegExp(`(${escapedTerm})`, 'gi')
     highlighted = highlighted.replace(regex, '<mark>$1</mark>')
   })
+  
   return highlighted
 }
 

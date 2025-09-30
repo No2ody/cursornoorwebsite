@@ -8,6 +8,7 @@ import {
   storePasswordHistory,
   securityHeaders
 } from '@/lib/password-security'
+import { withAuthRateLimit } from '@/lib/rate-limit'
 
 const registerSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
@@ -15,7 +16,7 @@ const registerSchema = z.object({
   password: passwordSchema,
 })
 
-export async function POST(request: NextRequest) {
+export const POST = withAuthRateLimit(async (request: NextRequest) => {
   try {
     const body = await request.json()
     
@@ -89,4 +90,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     )
   }
-}
+})

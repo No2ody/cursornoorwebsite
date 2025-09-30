@@ -16,13 +16,59 @@ declare module 'next-auth' {
       id: string
       role?: 'USER' | 'ADMIN'
     } & DefaultSession['user']
+    loginMethod?: string // Added for security tracking
+    loginTime?: number // Added for security tracking
+  }
+  interface JWT {
+    id: string
+    role?: 'USER' | 'ADMIN'
+    loginMethod?: string
+    loginTime?: number
   }
 }
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   basePath: '/api/auth',
   adapter: PrismaAdapter(prisma),
-  session: { strategy: 'jwt' },
+  session: { 
+    strategy: 'jwt',
+    maxAge: 24 * 60 * 60, // 24 hours
+    updateAge: 60 * 60, // 1 hour - update session every hour
+  },
+  jwt: {
+    maxAge: 24 * 60 * 60, // 24 hours
+  },
+  cookies: {
+    sessionToken: {
+      name: `__Secure-next-auth.session-token`,
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: process.env.NODE_ENV === 'production', // Only secure in production
+        domain: process.env.NODE_ENV === 'production' ? '.nooraltayseer.com' : undefined,
+      },
+    },
+    callbackUrl: {
+      name: `__Secure-next-auth.callback-url`,
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: process.env.NODE_ENV === 'production',
+        domain: process.env.NODE_ENV === 'production' ? '.nooraltayseer.com' : undefined,
+      },
+    },
+    csrfToken: {
+      name: `__Host-next-auth.csrf-token`,
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: process.env.NODE_ENV === 'production',
+      },
+    },
+  },
   ...authConfig,
   pages: {
     signIn: '/auth/signin',
@@ -76,19 +122,78 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }),
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, account }) {
       if (user) {
         token.role = (user as User).role
         token.id = user.id
+        token.loginTime = Date.now()
+        
+        // Store login method for security tracking
+        if (account) {
+          token.loginMethod = account.provider
+        }
       }
+      
+      // Check for session timeout (force re-authentication after 24 hours)
+      if (token.loginTime && Date.now() - (token.loginTime as number) > 24 * 60 * 60 * 1000) {
+        return {} // This will force a new login
+      }
+      
       return token
     },
-    async session({ session, token }) {
-      if (session.user) {
+    async session({ session, token, user }) {
+      if (session.user && token) {
         session.user.role = token.role as 'USER' | 'ADMIN'
         session.user.id = token.id as string
+        
+        // Add security metadata (don't expose sensitive info)
+        session.loginMethod = token.loginMethod as string
+        session.loginTime = token.loginTime as number
       }
       return session
+    },
+    async signIn({ user, account, profile, email, credentials }) {
+      // Additional security checks during sign-in
+      if (account?.provider === 'credentials') {
+        // For credential logins, ensure user exists and is active
+        const dbUser = await prisma.user.findUnique({
+          where: { email: user.email! },
+          select: { id: true, emailVerified: true, role: true }
+        })
+        
+        if (!dbUser) {
+          return false
+        }
+        
+        // Could add additional checks here (e.g., account locked, email verified, etc.)
+      }
+      
+      return true
+    },
+    async redirect({ url, baseUrl }) {
+      // Import URL validation
+      const { validateRedirectURL, createSafeRedirectURL } = await import('./lib/url-validation')
+      
+      // Validate the redirect URL
+      const validation = validateRedirectURL(url, baseUrl)
+      
+      if (validation.isValid && validation.sanitizedUrl) {
+        // If it's a relative URL, make it absolute
+        if (validation.sanitizedUrl.startsWith('/')) {
+          return `${baseUrl}${validation.sanitizedUrl}`
+        }
+        return validation.sanitizedUrl
+      }
+      
+      // Log security warning for invalid redirects
+      console.warn('Invalid redirect URL blocked:', {
+        url,
+        errors: validation.errors,
+        baseUrl,
+      })
+      
+      // Return safe fallback
+      return baseUrl
     },
   },
 })

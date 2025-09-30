@@ -1,11 +1,25 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@/auth'
 import prisma from '@/lib/prisma'
 import Stripe from 'stripe'
+import { validateInput, commonSchemas } from '@/lib/validation'
+import { withPaymentRateLimit } from '@/lib/rate-limit'
+import { z } from 'zod'
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)
+// Validate Stripe configuration
+if (!process.env.STRIPE_SECRET_KEY) {
+  throw new Error('STRIPE_SECRET_KEY environment variable is required')
+}
 
-export async function POST(req: Request) {
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY)
+
+// Input validation schema for payment
+const paymentSchema = z.object({
+  orderId: commonSchemas.id,
+  amount: z.number().positive().max(1000000).optional(), // Optional override
+})
+
+export const POST = withPaymentRateLimit(async (req: NextRequest) => {
   try {
     const session = await auth()
 
@@ -14,11 +28,17 @@ export async function POST(req: Request) {
     }
 
     const body = await req.json()
-    const { orderId } = body
-
-    if (!orderId) {
-      return new NextResponse('Order ID is required', { status: 400 })
+    
+    // Validate input
+    const validation = validateInput(paymentSchema, body)
+    if (!validation.success) {
+      return NextResponse.json(
+        { error: 'Invalid input', details: validation.errors },
+        { status: 400 }
+      )
     }
+    
+    const { orderId } = validation.data!
 
     // Get the order
     const order = await prisma.order.findUnique({
@@ -81,4 +101,4 @@ export async function POST(req: Request) {
     console.error('[PAYMENT_ERROR]', error)
     return new NextResponse('Internal error', { status: 500 })
   }
-}
+})

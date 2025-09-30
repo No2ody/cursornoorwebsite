@@ -154,6 +154,14 @@ model Product {
   wishlistItems WishlistItem[]
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
+  
+  // Performance indexes for common queries
+  @@index([categoryId, price])
+  @@index([price])
+  @@index([stock])
+  @@index([name])
+  @@index([createdAt])
+  @@index([brandId])
 }
 
 model Category {
@@ -254,6 +262,11 @@ model Review {
   product   Product  @relation(fields: [productId], references: [id])
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  
+  // Performance indexes for review queries
+  @@index([productId, rating])
+  @@index([userId])
+  @@index([createdAt])
 }
 
 model Cart {
